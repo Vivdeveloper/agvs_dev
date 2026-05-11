@@ -1,0 +1,278 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"eTr1TEXEfQ\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px; letter-spacing: 0.18px;\\\"><b>ERP Setup</b></span>\",\"col\":12}},{\"id\":\"8_5W0Zf7jT\",\"type\":\"card\",\"data\":{\"card_name\":\"CRM Entry\",\"col\":4}},{\"id\":\"ktuh41y40a\",\"type\":\"card\",\"data\":{\"card_name\":\"Sales Entry\",\"col\":4}},{\"id\":\"H6R-QQE5a3\",\"type\":\"card\",\"data\":{\"card_name\":\"Account Entry\",\"col\":4}},{\"id\":\"kk0zCZAX0A\",\"type\":\"card\",\"data\":{\"card_name\":\"Machine Setup\",\"col\":4}},{\"id\":\"BdbdOgSFia\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Stock</span>\",\"col\":12}},{\"id\":\"72QIsJ-vp3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Gate Pass\",\"col\":3}},{\"id\":\"Wgog1DKeBj\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>HR &amp; Payroll</b></span>\",\"col\":12}},{\"id\":\"PcZn--Xlx9\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Job Requisition\",\"col\":3}},{\"id\":\"lsxoDTkEq3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Job Opening\",\"col\":3}},{\"id\":\"DyIR5JiTD9\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Job Applicant\",\"col\":3}}]",
+ "creation": "2025-09-19 11:37:22.360491",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "share-people",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "AGVS",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Entry",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Opportunity",
+   "link_count": 0,
+   "link_to": "Opportunity",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quotation",
+   "link_count": 0,
+   "link_to": "Quotation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Order",
+   "link_count": 0,
+   "link_to": "Sales Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivery Note",
+   "link_count": 0,
+   "link_to": "Delivery Note",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Account Entry",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer",
+   "link_count": 0,
+   "link_to": "Customer",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivery Note",
+   "link_count": 0,
+   "link_to": "Delivery Note",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Invoice",
+   "link_count": 0,
+   "link_to": "Sales Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CRM Entry",
+   "link_count": 5,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Lead",
+   "link_count": 0,
+   "link_to": "Lead",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Opportunity",
+   "link_count": 0,
+   "link_to": "Opportunity",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Machine Installation",
+   "link_count": 0,
+   "link_to": "Machine Installation and Un-Installation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quotation",
+   "link_count": 0,
+   "link_to": "Quotation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Visit Log",
+   "link_count": 0,
+   "link_to": "Visit Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Machine Setup",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset",
+   "link_count": 0,
+   "link_to": "Asset",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Category",
+   "link_count": 0,
+   "link_to": "Asset Category",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Movement",
+   "link_count": 0,
+   "link_to": "Asset Movement",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Machine Model",
+   "link_count": 0,
+   "link_to": "Machine Model",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Type of Location",
+   "link_count": 0,
+   "link_to": "Type of Location",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asset Maintenance Team",
+   "link_count": 0,
+   "link_to": "Asset Maintenance Team",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-01-24 14:34:05.571670",
+ "modified_by": "indrani@exacuer.com",
+ "name": "AGVS",
+ "number_cards": [],
+ "owner": "indrani@exacuer.com",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 3.0,
+ "shortcuts": [
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Gate Pass",
+   "link_to": "Gate Pass",
+   "stats_filter": "[[\"Gate Pass\",\"status\",\"=\",\"Open\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Job Requisition",
+   "link_to": "Job Requisition",
+   "stats_filter": "[[\"Job Requisition\",\"status\",\"in\",[\"Pending\",\"Open & Approved\",null],false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Job Opening",
+   "link_to": "Job Opening",
+   "stats_filter": "[[\"Job Opening\",\"status\",\"=\",\"Open\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Job Applicant",
+   "link_to": "Job Applicant",
+   "stats_filter": "[[\"Job Applicant\",\"status\",\"=\",\"Open\",false]]",
+   "type": "DocType"
+  }
+ ],
+ "title": "AGVS"
+}

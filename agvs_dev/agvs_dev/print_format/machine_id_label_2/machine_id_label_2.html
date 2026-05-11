@@ -1,0 +1,23 @@
+<div style="width:100%; font-family: Arial, sans-serif; text-align:left; display:flex; align-items:center; gap:12px;">
+
+    <!--<div style="width:40px; height:40px; border-radius:50%; background:black; display:flex; align-items:center; justify-content:center;">-->
+    <!--    <span style="color:white; font-size:22px; font-weight:bold;">&#9786;</span>-->
+    <!--</div>-->
+    <table>
+        <tr>
+            <td style="width:100%; background:white; text-align:center; padding:6px;">
+                <img src="https://scentedslogan.m.frappe.cloud/files/ScentedSlogan3.png"
+                style="width:150%; max-height:90px; object-fit:contain;">
+            </td>
+        </tr>
+
+        <tr>
+            <td style="font-size:24px; font-weight:bold; line-height:1.6;">
+                Batch ID: {% set d = frappe.utils.getdate(doc.available_for_use_date) %}
+                          {{ d.day }}{{ "%02d"|format(d.month) }}{{ d.year }}<br>
+                Scriptor No: {{doc.name}}<br>
+                <span style="position: relative; top: 10px;">support@scentedslogan.com</span>
+            </td>
+        </tr>
+    </table>
+</div>

@@ -1,0 +1,223 @@
+{{letterhead}}
+<!-- PO Number -->
+<div style="margin-top:10px; font-family: Arial, Helvetica, sans-serif; font-size:11px;">
+    <b>{{ doc.name }}</b>
+</div>
+
+<hr style="border:0; border-top:1px solid #ddd; margin-top:8px; margin-bottom:10px;">
+
+
+<!-- Supplier + Date Section -->
+<table style="width:100%; font-family: Arial, Helvetica, sans-serif; font-size:11px;">
+
+    <tr>
+        <td style="color:#666; width:160px;">Supplier Name:</td>
+        <td style="font-weight:bold;">{{ doc.supplier }}</td>
+
+        <td style="color:#666; width:120px;">Date:</td>
+        <td style="font-weight:bold;">{{ doc.transaction_date }}</td>
+    </tr>
+
+    <tr>
+        <td></td>
+        <td></td>
+
+        <td style="color:#666;">Required By:</td>
+        <td style="font-weight:bold;">{{ doc.schedule_date }}</td>
+    </tr>
+
+</table>
+
+
+<hr style="border:0; border-top:1px solid #ddd; margin-top:10px; margin-bottom:10px;">
+
+
+<!-- Company Billing Address -->
+<table style="width:100%; font-family: Arial, Helvetica, sans-serif; font-size:11px;">
+
+    <tr>
+
+        <td style="color:#666; width:160px; vertical-align:top;">
+            Company Billing Address:
+        </td>
+
+        <td>
+            {{ doc.company_address_display }}
+        </td>
+
+    </tr>
+
+</table>
+
+
+
+<table style="width:100%; border-collapse:collapse; font-family: Arial, Helvetica, sans-serif; font-size:11px; margin-top:15px;">
+
+    <!-- Table Header -->
+    <thead>
+        <tr>
+
+            <th style="border:1px solid #d1d8dd; padding:8px; text-align:left; width:5%;">
+                Sr
+            </th>
+
+            <th style="border:1px solid #d1d8dd; padding:8px; text-align:left; width:55%;">
+                Description
+            </th>
+
+            <th style="border:1px solid #d1d8dd; padding:8px; text-align:right; width:15%;">
+                Quantity
+            </th>
+
+            <th style="border:1px solid #d1d8dd; padding:8px; text-align:right; width:12%;">
+                Rate
+            </th>
+
+            <th style="border:1px solid #d1d8dd; padding:8px; text-align:right; width:13%;">
+                Amount
+            </th>
+
+        </tr>
+    </thead>
+
+
+    <!-- Table Body -->
+    <tbody>
+
+        {% for item in doc.items %}
+
+        <tr>
+
+            <td style="border:1px solid #d1d8dd; padding:8px;">
+                {{ loop.index }}
+            </td>
+
+            <td style="border:1px solid #d1d8dd; padding:8px;">
+                {{ item.item_code }}<br>
+                {{ item.description }}
+            </td>
+
+            <td style="border:1px solid #d1d8dd; padding:8px; text-align:right;">
+                {{ item.qty }} {{ item.uom }}
+            </td>
+
+            <td style="border:1px solid #d1d8dd; padding:8px; text-align:right;">
+                {{ item.rate }}
+            </td>
+
+            <td style="border:1px solid #d1d8dd; padding:8px; text-align:right;">
+                {{ item.amount }}
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+
+<table style="width:100%; font-family: Arial, Helvetica, sans-serif; font-size:11px; margin-top:10px; border-top:1px solid #d1d8dd;">
+
+    <tr>
+
+        <!-- LEFT SIDE -->
+        <td style="width:55%; padding-top:10px; vertical-align:top;">
+
+            <table style="width:100%;">
+
+                <tr>
+                    <td style="color:#555;">Total Quantity:</td>
+                    <td style="text-align:right;">
+                        {{ doc.total_qty }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding-top:10px; color:#555;">In Words:</td>
+                    <td style="padding-top:10px;">
+                        {{ doc.in_words }}
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+
+
+        <!-- RIGHT SIDE TOTALS -->
+        <td style="width:45%; padding-top:10px; vertical-align:top;">
+
+            <table style="width:100%;">
+
+                <tr>
+                    <td style="color:#555;">Net Total:</td>
+                    <td style="text-align:right;">
+                        {{ doc.net_total }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding-top:6px; color:#555;">Grand Total:</td>
+                    <td style="text-align:right; padding-top:6px;">
+                        {{ doc.grand_total }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding-top:6px; color:#555;">Rounded Total:</td>
+                    <td style="text-align:right; padding-top:6px;">
+                        {{ doc.rounded_total }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding-top:6px; color:#555;">Additional Discount Amount:</td>
+                    <td style="text-align:right; padding-top:6px;">
+                        {{ doc.discount_amount }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding-top:6px; color:#555;">Advance Paid:</td>
+                    <td style="text-align:right; padding-top:6px;">
+                        {{ doc.advance_paid }}
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+
+    </tr>
+
+</table>
+
+
+<table style="width:100%; font-family: Arial, Helvetica, sans-serif; font-size:11px; margin-top:60px;">
+
+    <tr>
+
+        <td style="width:60%;"></td>
+
+        <td style="width:40%; text-align:right;">
+
+            <div style="font-weight:bold; margin-bottom:40px;">
+                {{ doc.company }}
+            </div>
+
+            <div style="border-top:1px solid #000; width:200px; float:right;"></div>
+
+            <div style="clear:both; padding-top:5px; font-weight:bold;">
+                Authorized<br>
+                Signatory
+            </div>
+
+        </td>
+
+    </tr>
+
+</table>
+
+

@@ -1,0 +1,141 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"jdudTa37LF\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Store Module\",\"col\":12}},{\"id\":\"Hq2aPIAV4F\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Material Request\",\"col\":3}},{\"id\":\"XcoByppOSo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Entry\",\"col\":3}},{\"id\":\"r5asFKFZB1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Receipt\",\"col\":3}},{\"id\":\"diDz6a0ICW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Note\",\"col\":3}},{\"id\":\"826trwh4kd\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"MCYgr5fqUX\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+ "creation": "2026-01-21 14:30:19.017590",
+ "custom_blocks": [
+  {
+   "custom_block_name": "Store Module",
+   "label": "Store Module"
+  }
+ ],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "color-energy-points",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Store Workspace",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Ledger",
+   "link_count": 0,
+   "link_to": "Stock Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Stock Ledger Entry",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Stock Analytics",
+   "link_count": 0,
+   "link_to": "Stock Analytics",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Balance",
+   "link_count": 0,
+   "link_to": "Stock Balance",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Stock Ledger Entry",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Ageing",
+   "link_count": 0,
+   "link_to": "Stock Ageing",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Item",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Receipt Trends",
+   "link_count": 0,
+   "link_to": "Purchase Receipt Trends",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Purchase Receipt",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivery Note Trends",
+   "link_count": 0,
+   "link_to": "Delivery Note Trends",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Delivery Note",
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-01-24 14:34:05.755984",
+ "modified_by": "indrani@exacuer.com",
+ "name": "Store Workspace",
+ "number_cards": [],
+ "owner": "indrani@exacuer.com",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 7.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Material Request",
+   "link_to": "Material Request",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Stock Entry",
+   "link_to": "Stock Entry",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Purchase Receipt",
+   "link_to": "Purchase Receipt",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Delivery Note",
+   "link_to": "Delivery Note",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Store Workspace"
+}

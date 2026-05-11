@@ -5,6 +5,70 @@ app_description = "agvs_dev"
 app_email = "sanketkatkade782@gmail.com"
 app_license = "mit"
 
+fixtures = [
+	# Custom Role
+	{"dt": "Role", "filters": [["is_custom", "=", 1]]},
+	# Notifications (no proper folder structure in Frappe)
+	{"dt": "Notification", "filters": [["name", "!=", ""]]},
+	# Email Templates
+	{"dt": "Email Template", "filters": [["name", "!=", ""]]},
+	# Letter Head
+	{"dt": "Letter Head", "filters": [["name", "!=", ""]]},
+	# Translations
+	{"dt": "Translation", "filters": [["name", "!=", ""]]},
+]
+
+# Client Scripts for standard ERPNext doctypes (custom doctypes have their own doctype JS files)
+doctype_js = {
+	"Asset": "public/js/asset.js",
+	"Asset Maintenance Log": "public/js/asset_maintenance_log.js",
+	"Asset Movement": "public/js/asset_movement.js",
+	"Item": "public/js/item.js",
+	"Lead": "public/js/lead.js",
+	"Maintenance Schedule": "public/js/maintenance_schedule.js",
+	"Material Request": "public/js/material_request.js",
+	"Opportunity": "public/js/opportunity.js",
+	"Sales Order": "public/js/sales_order.js",
+}
+
+# Server Script Events for standard ERPNext doctypes
+# (custom doctypes handle events via their Python controller class)
+doc_events = {
+	"Asset": {
+		"on_submit": "agvs_dev.agvs_dev.events.asset.fetch_existing_balance",
+	},
+	"Asset Maintenance Log": {
+		"before_save": "agvs_dev.agvs_dev.events.asset_maintenance_log.asset_maintenance_log_call_from_asset_item",
+		"on_submit": "agvs_dev.agvs_dev.events.asset_maintenance_log.autogenerate_asset_movement_from_visit",
+	},
+	"Asset Maintenance Team": {
+		"on_update": "agvs_dev.agvs_dev.events.asset_maintenance_team.create_user_permissions_entry",
+	},
+	"Item": {
+		"before_insert": "agvs_dev.agvs_dev.events.item.item_name_series",
+	},
+	"Job Requisition": {
+		"before_insert": "agvs_dev.agvs_dev.events.job_requisition.job_requistion",
+	},
+	"Opportunity": {
+		"before_insert": "agvs_dev.agvs_dev.events.opportunity.lead_to_opportunity",
+	},
+	"Asset Movement": {
+		"on_submit": "agvs_dev.agvs_dev.events.asset_movement.on_submit",
+	},
+	"Stock Entry": {
+		"on_submit": "agvs_dev.agvs_dev.events.stock_entry.on_submit",
+	},
+}
+
+# Scheduled Tasks
+scheduler_events = {
+	"daily": [
+		"agvs_dev.agvs_dev.events.scheduled_tasks.overdue_installation_status_auto_update",
+		"agvs_dev.agvs_dev.events.scheduled_tasks.overdue_uninstallation_status_auto_update",
+	],
+}
+
 # Apps
 # ------------------
 

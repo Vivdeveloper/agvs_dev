@@ -1,0 +1,132 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"7npANz0H0l\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Payroll Workspace\",\"col\":12}},{\"id\":\"sfst623uUL\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Salary Component\",\"col\":3}},{\"id\":\"X6Ae1XkQB_\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Salary Structure\",\"col\":3}},{\"id\":\"-tqXnp5NVM\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Salary Structure Assignment\",\"col\":3}},{\"id\":\"Jg0TDd0w_x\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Bulk Salary Structure Assignment\",\"col\":3}},{\"id\":\"7m-V4m6rlt\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Salary Slip\",\"col\":3}},{\"id\":\"YdR0Ae_G3P\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payroll Entry\",\"col\":3}},{\"id\":\"d-lP7FGnOZ\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"QwpP_8d_1J\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+ "creation": "2026-01-24 14:33:58.932980",
+ "custom_blocks": [
+  {
+   "custom_block_name": "Payroll Workspace",
+   "label": "Payroll Workspace"
+  }
+ ],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "clipboard",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "PayRoll Workspace",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Salary Register",
+   "link_count": 0,
+   "link_to": "Salary Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Provident Fund Deductions",
+   "link_count": 0,
+   "link_to": "Provident Fund Deductions",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Professional Tax Deductions",
+   "link_count": 0,
+   "link_to": "Professional Tax Deductions",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Income Tax Deductions",
+   "link_count": 0,
+   "link_to": "Income Tax Deductions",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Salary Slip",
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-01-24 14:55:52.930082",
+ "modified_by": "indrani@exacuer.com",
+ "name": "PayRoll Workspace",
+ "number_cards": [],
+ "owner": "indrani@exacuer.com",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 9.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Salary Component",
+   "link_to": "Salary Component",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Payroll Entry",
+   "link_to": "Payroll Entry",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Salary Structure",
+   "link_to": "Salary Structure",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Salary Structure Assignment",
+   "link_to": "Salary Structure Assignment",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Bulk Salary Structure Assignment",
+   "link_to": "Bulk Salary Structure Assignment",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Salary Slip",
+   "link_to": "Salary Slip",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "PayRoll Workspace"
+}

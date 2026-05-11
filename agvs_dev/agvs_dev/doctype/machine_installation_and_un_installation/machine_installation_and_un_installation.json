@@ -1,0 +1,417 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-05-09 20:43:05.654307",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_6ytt",
+  "amended_from",
+  "naming_series",
+  "reference_name",
+  "hidden_opportunity_name",
+  "contact_person",
+  "contact_email",
+  "contact_mobile",
+  "address_display",
+  "maintenance_team",
+  "continue_with_subscription",
+  "assigned_to",
+  "column_break_luiq",
+  "status",
+  "installation_type",
+  "planned_installation_date",
+  "actual_installation_date",
+  "planned_uninstallation_date",
+  "actual_uninstallation_date",
+  "client_location",
+  "sales_order",
+  "customer",
+  "contract_start_date",
+  "contract_end_date",
+  "no_of_visits",
+  "section_break_kqqi",
+  "machine_items",
+  "section_break_gtwf",
+  "material_warehouse",
+  "get_materials_for_transfer",
+  "table_uuer",
+  "more_info_section",
+  "opportunity",
+  "material_request",
+  "column_break_ydwv",
+  "visit_log",
+  "column_break_uxsj",
+  "asset_issue_done",
+  "material_issue_done",
+  "asset_transfer_done",
+  "material_transfer_done"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_6ytt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Machine Installation and Un-Installation",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "MI.-.2025-26.-.####"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Link",
+   "label": "Opportunity",
+   "options": "Opportunity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hidden_opportunity_name",
+   "fieldtype": "Link",
+   "label": "Opportunity",
+   "options": "Opportunity",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "reference_name.contact_person",
+   "fetch_if_empty": 1,
+   "fieldname": "contact_person",
+   "fieldtype": "Link",
+   "label": "Contact Person",
+   "options": "Contact"
+  },
+  {
+   "fetch_from": "contact_person.email_id",
+   "fetch_if_empty": 1,
+   "fieldname": "contact_email",
+   "fieldtype": "Data",
+   "label": "Contact Email",
+   "options": "Email"
+  },
+  {
+   "fetch_from": "contact_person.mobile_no",
+   "fetch_if_empty": 1,
+   "fieldname": "contact_mobile",
+   "fieldtype": "Data",
+   "label": "Contact Mobile"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "address_display",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "maintenance_team",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Maintenance Team",
+   "no_copy": 1,
+   "options": "Asset Maintenance Team",
+   "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "depends_on": "eval:doc.installation_type == \"Demo Installation\"",
+   "description": "If Client Wants to Continue using the Product",
+   "fieldname": "continue_with_subscription",
+   "fieldtype": "Check",
+   "label": "Continue with Subscription",
+   "read_only": 1
+  },
+  {
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Assigned To",
+   "no_copy": 1,
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_luiq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Open\nInstalled\nDemo Installation Completed\nDemo Uninstallation Completed\nOverdue Uninstallation\nOverdue Installation\nCompleted\nTo Deliver and Bill",
+   "read_only": 1
+  },
+  {
+   "fieldname": "installation_type",
+   "fieldtype": "Select",
+   "ignore_user_permissions": 1,
+   "in_list_view": 1,
+   "label": "Installation Type",
+   "no_copy": 1,
+   "options": "\nInstallation\nDemo Installation\nUninstallation",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.installation_type == \"Demo Installation\" || doc.installation_type == \"Installation\"",
+   "fieldname": "planned_installation_date",
+   "fieldtype": "Date",
+   "label": "Plan Installation Date",
+   "no_copy": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.installation_type == \"Demo Installation\" || doc.installation_type == \"Installation\"",
+   "fieldname": "actual_installation_date",
+   "fieldtype": "Datetime",
+   "label": "Actual Installation Date",
+   "no_copy": 1
+  },
+  {
+   "depends_on": "eval:doc.installation_type == \"Demo Installation\" || doc.installation_type == \"Uninstallation\"",
+   "fieldname": "planned_uninstallation_date",
+   "fieldtype": "Date",
+   "label": "Planned Uninstallation Date",
+   "no_copy": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.installation_type == \"Demo Installation\" || doc.installation_type == \"Uninstallation\"",
+   "fieldname": "actual_uninstallation_date",
+   "fieldtype": "Datetime",
+   "label": "Actual Uninstallation Date",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "client_location",
+   "fieldtype": "Link",
+   "label": "Client Location",
+   "no_copy": 1,
+   "options": "Location"
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "sales_order.customer",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fetch_from": "sales_order.custom_contract_start_date",
+   "fieldname": "contract_start_date",
+   "fieldtype": "Date",
+   "label": "Contract Start Date",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "sales_order.custom_contract_end_date",
+   "fieldname": "contract_end_date",
+   "fieldtype": "Date",
+   "label": "Contract End date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "no_of_visits",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "No of Visits"
+  },
+  {
+   "fieldname": "section_break_kqqi",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_bulk_edit": 1,
+   "fieldname": "machine_items",
+   "fieldtype": "Table",
+   "label": "Machine Items",
+   "options": "Machine Item"
+  },
+  {
+   "fieldname": "section_break_gtwf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "material_warehouse",
+   "fieldtype": "Link",
+   "label": "Material Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "get_materials_for_transfer",
+   "fieldtype": "Button",
+   "label": "Get Materials for Transfer"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "table_uuer",
+   "fieldtype": "Table",
+   "label": "Requirement Item(s)",
+   "options": "Asset Material Request Item"
+  },
+  {
+   "fieldname": "more_info_section",
+   "fieldtype": "Section Break",
+   "label": "More Info"
+  },
+  {
+   "fieldname": "opportunity",
+   "fieldtype": "Link",
+   "label": "Opportunity",
+   "options": "Opportunity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "material_request",
+   "fieldtype": "Link",
+   "label": "Material Request",
+   "options": "Material Request",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ydwv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "visit_log",
+   "fieldtype": "Link",
+   "label": "Visit Log",
+   "options": "Visit Log",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_uxsj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "asset_issue_done",
+   "fieldtype": "Check",
+   "label": "Asset Issue Done",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "material_issue_done",
+   "fieldtype": "Check",
+   "label": "Material Issue Done",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "asset_transfer_done",
+   "fieldtype": "Check",
+   "label": "Asset Transfer Done",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "material_transfer_done",
+   "fieldtype": "Check",
+   "label": "Material Transfer Done",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Visit Log",
+   "link_fieldname": "machine_installation"
+  },
+  {
+   "group": "Asset & Material",
+   "link_doctype": "Asset Movement",
+   "link_fieldname": "custom_machine_installation"
+  },
+  {
+   "group": "Asset & Material",
+   "link_doctype": "Stock Entry",
+   "link_fieldname": "custom_machine_installation"
+  }
+ ],
+ "modified": "2026-05-11 14:05:46.934854",
+ "modified_by": "Administrator",
+ "module": "agvs_dev",
+ "name": "Machine Installation and Un-Installation",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "color": "Orange",
+   "custom": 1,
+   "title": "Open"
+  },
+  {
+   "color": "Purple",
+   "title": "Installed"
+  },
+  {
+   "color": "Red",
+   "title": "Overdue Uninstallation"
+  },
+  {
+   "color": "Green",
+   "title": "Completed"
+  },
+  {
+   "color": "Red",
+   "title": "Overdue Installation"
+  }
+ ]
+}
