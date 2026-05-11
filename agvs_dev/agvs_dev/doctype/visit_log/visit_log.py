@@ -697,6 +697,44 @@ class VisitLog(Document):
                     "</ul>"
                 )
 
+    # Auto-create Asset Movement (Receipt) when Demo Uninstallation VL is submitted
+    def _auto_create_demo_uninstallation_entries(self):
+        if self.visit_type != "Demo Uninstallation":
+            return
+
+        if not self.machine_installation:
+            frappe.throw("Machine Installation is not linked to this Visit Log.")
+
+        mi = frappe.get_doc("Machine Installation and Un-Installation", self.machine_installation)
+
+        # Asset Movement (Receipt) — asset returns from client location to Office
+        am_exists = frappe.db.exists("Asset Movement", {
+            "custom_machine_installation": self.machine_installation,
+            "purpose": "Receipt",
+            "docstatus": 1
+        })
+        if not am_exists:
+            assets = []
+            for row in (mi.machine_items or []):
+                if row.asset:
+                    assets.append({
+                        "asset": row.asset,
+                        "source_location": mi.client_location or "",
+                        "target_location": "Office"
+                    })
+
+            if assets:
+                am = frappe.get_doc({
+                    "doctype": "Asset Movement",
+                    "purpose": "Receipt",
+                    "company": self.company or "AGVS ENTERPRISES PVT LTD",
+                    "custom_visit_log": self.name,
+                    "custom_machine_installation": self.machine_installation,
+                    "assets": assets
+                })
+                am.insert(ignore_permissions=True)
+                am.submit()
+
     # Validation for Demo Machine Uninstallation
     def _validation_for_demo_machine_uninstallation(self):
         if self.visit_type == "Demo Uninstallation":
