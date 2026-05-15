@@ -20,6 +20,7 @@ fixtures = [
 
 # Client Scripts for standard ERPNext doctypes (custom doctypes have their own doctype JS files)
 doctype_js = {
+	"Address": "public/js/address.js",
 	"Asset": "public/js/asset.js",
 	"Asset Maintenance Log": "public/js/asset_maintenance_log.js",
 	"Asset Movement": "public/js/asset_movement.js",

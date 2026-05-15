@@ -85,9 +85,19 @@ frappe.ui.form.on('Opportunity', {
             frm.add_custom_button(__('Quotation'), function () {
                 frappe.model.open_mapped_doc({
                     method: "erpnext.crm.doctype.opportunity.opportunity.make_quotation",
-                    // method: "erpnext.crm.doctype.lead.lead.make_quotation",
                     frm: frm
                 });
+            }, __('Create'));
+        }
+
+        // Address button — always visible on saved docs
+        if (!frm.is_new()) {
+            frm.add_custom_button(__('Address'), function () {
+                frappe.route_options = {
+                    address_title: frm.doc.customer_name || frm.doc.contact_person || frm.doc.name,
+                    address_type: 'Billing'
+                };
+                frappe.new_doc('Address');
             }, __('Create'));
         }
     }
@@ -143,7 +153,7 @@ frappe.ui.form.on('Opportunity', {
 
             frappe.db.get_list('Machine Installation and Un-Installation', {
                 filters: {
-                    hidden_opportunity_name: frm.doc.name
+                    reference_name: frm.doc.name
                 },
                 fields: ['actual_installation_date', 'actual_uninstallation_date']
             }).then(function(data) {
@@ -770,7 +780,6 @@ frappe.ui.form.on('Opportunity', {
                 }
 
                 frappe.route_options = {
-                    hidden_opportunity_name: frm.doc.name,
                     opportunity: frm.doc.name,
                     reference_name: frm.doc.name,
                     contact_person: frm.doc.contact_person,
@@ -851,56 +860,6 @@ function update_lead(frm) {
 // });
 
 
-frappe.ui.form.on('Opportunity', {
-    refresh: function(frm) {
-
-        if (!frm.is_new() && frm.doc.sales_stage) {
-
-            if (frm.doc.sales_stage.includes("3. Demo")) {
-
-                frm.add_custom_button(
-                    "Create Quotation",
-                    function() {
-
-                        // Fetch address
-                        frappe.db.get_value(
-                            'Address',
-                            { 'name': frm.doc.customer_address || frm.doc.address },
-                            ['address_line1', 'address_line2', 'city', 'state', 'pincode', 'country'],
-                            function(address_data) {
-
-                                let formatted_address = '';
-
-                                if (address_data) {
-                                    formatted_address = [
-                                        address_data.address_line1,
-                                        address_data.address_line2,
-                                        address_data.city,
-                                        address_data.state,
-                                        address_data.pincode,
-                                        address_data.country
-                                    ].filter(Boolean).join('\n');
-                                }
-
-                                // Pass to Quotation
-                                frappe.route_options = {
-                                    opportunity: frm.doc.name,
-                                    contact_person: frm.doc.contact_person,
-                                    contact_email: frm.doc.contact_email,
-                                    contact_mobile: frm.doc.contact_mobile,
-                                    address: formatted_address   // ✅ your requirement
-                                };
-
-                                frappe.new_doc("Quotation");
-                            }
-                        );
-                    },
-                    "Create"
-                );
-            }
-        }
-    }
-});
 
 // === Read only date field (disabled) ===
 frappe.ui.form.on('Opportunity', {

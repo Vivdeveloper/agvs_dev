@@ -7,15 +7,20 @@ def lead_to_opportunity(doc, method=None):
         opp_fields = {f.fieldname for f in doc.meta.get("fields")}
         lead_fields = {f.fieldname for f in lead.meta.get("fields")}
         common = opp_fields.intersection(lead_fields)
-    
+
         allowed_types = {
             "Data", "Select", "Link", "Small Text", "Text",
             "Int", "Float", "Currency", "Check", "Date", "Datetime"
         }
-    
+
+        # These fields should not be auto-copied from Lead
+        excluded_fields = {"opportunity_type"}
+
         lead_fieldtypes = {f.fieldname: f.fieldtype for f in lead.meta.get("fields")}
-    
+
         for fieldname in common:
+            if fieldname in excluded_fields:
+                continue
             if lead_fieldtypes.get(fieldname) in allowed_types:
                 val = lead.get(fieldname)
                 if val is not None and val != "" and not doc.get(fieldname):
