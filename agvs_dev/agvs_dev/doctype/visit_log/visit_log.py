@@ -222,10 +222,10 @@ class VisitLog(Document):
             # -------------------------------
             if mi_doc.installation_type == "Installation":
         
-                # ✅ Asset Movement (Transfer)
+                # ✅ Asset Movement (Issue)
                 asset_issue = frappe.get_list("Asset Movement", filters={
                     "custom_visit_log": self.name,
-                    "purpose": "Transfer",
+                    "purpose": "Issue",
                     "docstatus": 1
                 }, limit_page_length=1)
         

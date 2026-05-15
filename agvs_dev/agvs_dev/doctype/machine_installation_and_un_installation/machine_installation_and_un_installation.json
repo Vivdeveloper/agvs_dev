@@ -10,7 +10,6 @@
   "amended_from",
   "naming_series",
   "reference_name",
-  "hidden_opportunity_name",
   "contact_person",
   "contact_email",
   "contact_mobile",
@@ -71,13 +70,6 @@
   },
   {
    "fieldname": "reference_name",
-   "fieldtype": "Link",
-   "label": "Opportunity",
-   "options": "Opportunity",
-   "read_only": 1
-  },
-  {
-   "fieldname": "hidden_opportunity_name",
    "fieldtype": "Link",
    "label": "Opportunity",
    "options": "Opportunity",
@@ -286,6 +278,7 @@
   {
    "fieldname": "opportunity",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Opportunity",
    "options": "Opportunity",
    "read_only": 1
@@ -364,7 +357,7 @@
    "link_fieldname": "custom_machine_installation"
   }
  ],
- "modified": "2026-05-11 14:05:46.934854",
+ "modified": "2026-05-14 19:55:36.409755",
  "modified_by": "Administrator",
  "module": "agvs_dev",
  "name": "Machine Installation and Un-Installation",

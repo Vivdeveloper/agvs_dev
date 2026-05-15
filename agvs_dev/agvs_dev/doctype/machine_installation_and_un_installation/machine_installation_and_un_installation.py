@@ -7,6 +7,7 @@ class MachineInstallationandUnInstallation(Document):
     def before_save(self):
         self._machine_installation_before_save()
         self._machine_satatu_chnage_by_viv()
+        self._checkboxes_in_mi()
 
     # machine installation before save
     def _machine_installation_before_save(self):
@@ -140,25 +141,25 @@ class MachineInstallationandUnInstallation(Document):
         
         if self.installation_type == "Installation":
             errors = []
-        
+
             am_list = frappe.get_list("Asset Movement", filters={
                 "custom_machine_installation": self.name,
-                "purpose": "Transfer",
+                "purpose": "Issue",
                 "docstatus": 1
             }, fields=["name"], limit_page_length=1)
-        
+
             se_list = frappe.get_list("Stock Entry", filters={
                 "custom_machine_installation": self.name,
-                "stock_entry_type": "Material Transfer",
+                "stock_entry_type": "Material Issue",
                 "docstatus": 1
             }, fields=["name"], limit_page_length=1)
-        
+
             if not am_list:
                 errors.append("Asset Issue (Asset Movement) has not been created or submitted yet.")
-        
+
             if not se_list:
                 errors.append("Material Issue (Stock Entry) has not been created or submitted yet.")
-        
+
             if errors:
                 frappe.throw("Cannot submit. Complete the following first:<br><ul>" + "".join(["<li>" + e + "</li>" for e in errors]) + "</ul>")
 
@@ -241,12 +242,12 @@ class MachineInstallationandUnInstallation(Document):
     # Validation for demo machine
     def _validation_for_demo_machine(self):
         if self.installation_type == "Demo Installation":
-        
+
             errors = []
-        
+
             am_list = frappe.get_list("Asset Movement", filters={
                 "custom_machine_installation": self.name,
-                "purpose": "Transfer",
+                "purpose": "Issue",
                 "docstatus": 1
             }, fields=["name"], limit_page_length=1)
         
@@ -408,14 +409,14 @@ class MachineInstallationandUnInstallation(Document):
         # INSTALLATION / UNINSTALLATION
         # -------------------------------
         if self.installation_type == "Installation":
-        
-            # ✅ Asset Movement (Transfer)
+
+            # ✅ Asset Movement (Issue)
             asset_issue = frappe.get_list("Asset Movement", filters={
                 "custom_machine_installation": self.name,
-                "purpose": "Transfer",
+                "purpose": "Issue",
                 "docstatus": 1
             }, limit_page_length=1)
-        
+
             self.asset_issue_done = 1 if asset_issue else 0
         
             # ✅ Stock Entry (Material Issue)
@@ -478,10 +479,10 @@ class MachineInstallationandUnInstallation(Document):
         
         elif self.installation_type == "Demo Installation":
 
-            # Asset Movement (Transfer) → asset_issue_done
+            # Asset Movement (Issue) → asset_issue_done
             asset_issue = frappe.get_list("Asset Movement", filters={
                 "custom_machine_installation": self.name,
-                "purpose": "Transfer",
+                "purpose": "Issue",
                 "docstatus": 1
             }, limit_page_length=1)
 

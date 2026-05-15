@@ -30,7 +30,7 @@ function strength_dialog(frm) {
         primary_action(values) {
             d.hide();
             frappe.call({
-                method: "create_strength_item",
+                method: "agvs_dev.agvs_dev.events.api.create_strength_item",
                 args: {
                     item_name: frm.doc.name,
                     strength: values.strength
