@@ -24,14 +24,7 @@ class MachineInstallationandUnInstallation(Document):
 
     # machine satatu chnage by viv
     def _machine_satatu_chnage_by_viv(self):
-        # if doc.actual_installation_date:
-        #     doc.status = "Installed"
-        
-        
-        if self.actual_installation_date and self.actual_uninstallation_date:
-            self.status = "Completed"
-        elif self.actual_installation_date:
-            self.status = "Installed"
+        pass  # Status is managed by VL submit (on_update) and scheduled jobs
 
     def before_submit(self):
         self._ai_and_mi()
@@ -150,7 +143,7 @@ class MachineInstallationandUnInstallation(Document):
 
             se_list = frappe.get_list("Stock Entry", filters={
                 "custom_machine_installation": self.name,
-                "stock_entry_type": "Material Issue",
+                "stock_entry_type": "Material transfer",
                 "docstatus": 1
             }, fields=["name"], limit_page_length=1)
 
@@ -561,8 +554,9 @@ def create_return_to_company(mi_name):
     employee_warehouse = frappe.db.get_value("Warehouse", {"custom_user": mi.assigned_to}, "name") or ""
     stores_warehouse = mi.material_warehouse or ""
 
-    # Company location = source_location of the first Transfer AM for this MI
-    # (the create_asset_issue AM which moved asset from company → employee before demo)
+    # Company location:
+    # - For Demo Installation MI: source_location of first Transfer AM (company → employee)
+    # - For Uninstallation MI: no Transfer AM exists; use asset's current location from Asset doctype
     company_loc_data = frappe.db.sql("""
         SELECT ami.source_location
         FROM `tabAsset Movement Item` ami
@@ -573,7 +567,13 @@ def create_return_to_company(mi_name):
         ORDER BY am.creation ASC
         LIMIT 1
     """, mi_name, as_dict=True)
-    company_location = company_loc_data[0].source_location if company_loc_data else ""
+
+    if company_loc_data and company_loc_data[0].source_location:
+        company_location = company_loc_data[0].source_location
+    else:
+        # Uninstallation: fetch from first asset's current location in Asset doctype
+        first_asset = (mi.machine_items or [{}])[0].asset if mi.machine_items else None
+        company_location = frappe.db.get_value("Asset", first_asset, "location") if first_asset else ""
 
     result = {}
 
@@ -648,6 +648,15 @@ def create_return_to_company(mi_name):
         se.insert(ignore_permissions=True)
         se.submit()
         result["se"] = se.name
+
+    # Mark that the asset has been returned to company
+    frappe.db.set_value(
+        "Machine Installation and Un-Installation",
+        mi_name,
+        "submitted_to_company",
+        1,
+        update_modified=False
+    )
 
     return result
 

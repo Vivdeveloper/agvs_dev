@@ -186,27 +186,67 @@ frappe.ui.form.on('Sales Order', {
         if (frm.doc.docstatus === 1) {
             frm.add_custom_button(__('Machine Installation and Un-Installation'), function() {
 
-                let clean_address = (frm.doc.address_display || '')
-                    .replace(/<br\s*\/?>/gi, '\n')
-                    .replace(/<\/?[^>]+(>|$)/g, "");
+                frappe.db.get_list('Machine Installation and Un-Installation', {
+                    filters: [
+                        ['sales_order', '=', frm.doc.name],
+                        ['docstatus', '!=', 2]
+                    ],
+                    fields: ['name', 'installation_type'],
+                    limit: 10
+                }).then(mis => {
+                    console.log('Existing MIs for this SO:', mis);
+                    const has_installation   = mis.some(m => m.installation_type === 'Installation');
+                    const has_uninstallation = mis.some(m => m.installation_type === 'Uninstallation');
 
-                // ✅ Pass via route_options
-                frappe.route_options = {
-                    sales_order: frm.doc.name,
-                    customer: frm.doc.customer,
-                    planned_installation_date: frm.doc.planned_installation_date,
-                    planned_uninstallation_date: frm.doc.delivery_date,
-                    status: 'To Deliver and Bill',
-                    installation_type: 'Installation',
-                    contact_person: frm.doc.contact_person,
-                    contact_mobile: frm.doc.contact_phone,
-                    contact_email: frm.doc.contact_email,
-                    company: frm.doc.company,
-                    no_of_visits: frm.doc.qty,
-                    address_display: clean_address   // ✅ works here
-                };
+                    if (has_installation && has_uninstallation) {
+                        frappe.msgprint({
+                            title: __('Already Created'),
+                            indicator: 'orange',
+                            message: __('Both Installation and Uninstallation records have already been created for this Sales Order.')
+                        });
+                        return;
+                    }
 
-                frappe.new_doc('Machine Installation and Un-Installation');
+                    let clean_address = (frm.doc.address_display || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .replace(/<\/?[^>]+(>|$)/g, "");
+
+                        
+                    console.log(has_installation,"hasinstallation")
+                    if (!has_installation) {
+                        // Create Installation MI
+                        frappe.route_options = {
+                            sales_order:                frm.doc.name,
+                            customer:                   frm.doc.customer,
+                            planned_installation_date:  frm.doc.planned_installation_date,
+                            planned_uninstallation_date: frm.doc.delivery_date,
+                            installation_type:          'Installation',
+                            contact_person:             frm.doc.contact_person,
+                            contact_mobile:             frm.doc.contact_phone,
+                            contact_email:              frm.doc.contact_email,
+                            company:                    frm.doc.company,
+                            no_of_visits:               frm.doc.qty,
+                            address_display:            clean_address
+                        };
+                    } else {
+                        // Installation exists → create Uninstallation MI
+                        // Use frappe.flags to carry the type across the route change —
+                        // route_options are nulled before triggers fire, and the Select field
+                        // won't accept 'Uninstallation' until refresh sets its options.
+                        frappe.flags.mi_force_installation_type = 'Uninstallation';
+                        frappe.route_options = {
+                            sales_order:       frm.doc.name,
+                            customer:          frm.doc.customer,
+                            contact_person:    frm.doc.contact_person,
+                            contact_mobile:    frm.doc.contact_phone,
+                            contact_email:     frm.doc.contact_email,
+                            company:           frm.doc.company,
+                            address_display:   clean_address
+                        };
+                    }
+
+                    frappe.new_doc('Machine Installation and Un-Installation');
+                });
             });
         }
     }

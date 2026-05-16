@@ -206,6 +206,10 @@ frappe.ui.form.on('Machine Installation and Un-Installation', {
                         create_material_receipt(frm);
                     }, 'Create');
 
+                    frm.add_custom_button(__("Submit to Company"), () => {
+                        create_return_to_company(frm);
+                    });
+
                     frm.page.btn_secondary
                         .find('.dropdown-toggle')
                         .addClass('btn-default');
@@ -812,7 +816,7 @@ function createMaterialRequestFromMI(frm) {
 // ===============================
 function create_asset_issue(frm) {
     const is_demo = frm.doc.installation_type === "Demo Installation";
-    const purpose = is_demo ? "Transfer" : "Issue";
+    const purpose = is_demo ? "Transfer" : "Transfer";
 
     frappe.call({
         method: "frappe.client.get_list",
@@ -1090,7 +1094,11 @@ function update_opportunity(frm) {
 frappe.ui.form.on('Machine Installation and Un-Installation', {
     sales_order(frm) {
         if (frm.doc.sales_order) {
-            frm.set_value('installation_type', 'Installation');
+            // Don't override if route_options already specifies installation_type (e.g. Uninstallation from SO button)
+            const route_type = frappe.route_options && frappe.route_options.installation_type;
+            if (!route_type && !frm.doc.installation_type) {
+                frm.set_value('installation_type', 'Installation');
+            }
         }
     },
     reference_name(frm) {
@@ -1137,9 +1145,51 @@ frappe.ui.form.on('Machine Installation and Un-Installation', {
                 'options',
                 'Installation\nUninstallation'
             );
+
+            // Force installation_type set via frappe.flags (route_options can't do this
+            // reliably because the Select options aren't ready when route_options fires)
+            if (frm.is_new() && frappe.flags.mi_force_installation_type) {
+                const forced = frappe.flags.mi_force_installation_type;
+                delete frappe.flags.mi_force_installation_type;
+                frm.set_value('installation_type', forced);
+
+                if (forced === 'Uninstallation') {
+                    _copy_from_installation_mi(frm);
+                }
+            }
         }
     }
 });
+
+function _copy_from_installation_mi(frm) {
+    frappe.db.get_list('Machine Installation and Un-Installation', {
+        filters: {
+            sales_order: frm.doc.sales_order,
+            installation_type: 'Installation',
+            docstatus: ['!=', 2]
+        },
+        fields: ['name'],
+        limit: 1
+    }).then(res => {
+        if (!res || !res[0]) return;
+
+        frappe.db.get_doc('Machine Installation and Un-Installation', res[0].name).then(inst => {
+            if (inst.client_location)  frm.set_value('client_location',  inst.client_location);
+            if (inst.client_warehouse) frm.set_value('client_warehouse', inst.client_warehouse);
+            if (inst.contact_email)    frm.set_value('contact_email',    inst.contact_email);
+            if (inst.contact_mobile)   frm.set_value('contact_mobile',   inst.contact_mobile);
+            if (inst.address_display)  frm.set_value('address_display',  inst.address_display);
+
+            frm.clear_table('machine_items');
+            (inst.machine_items || []).forEach(row => {
+                let r = frm.add_child('machine_items');
+                r.asset      = row.asset;
+                r.asset_name = row.asset_name;
+            });
+            frm.refresh_field('machine_items');
+        });
+    });
+}
 
 
 // === Link material request to MI (removed) ===
@@ -1320,10 +1370,17 @@ function set_user_filter(frm) {
 }
 
 
-// === Mark as Completed Button (disabled) ===
+// === Mark as Completed Button ===
 frappe.ui.form.on("Machine Installation and Un-Installation", {
     refresh(frm) {
         if (frm.doc.docstatus === 1 && !frm.doc.continue_with_subscription) {
+            const needs_return = ["Uninstallation", "Demo Installation"].includes(frm.doc.installation_type);
+
+            // For Uninstallation / Demo Installation: only allow after Submit to Company is done
+            if (needs_return && !frm.doc.submitted_to_company) {
+                return;
+            }
+
             frm.add_custom_button(__("Mark as Completed"), () => {
                 frappe.db.set_value(
                     "Machine Installation and Un-Installation",
