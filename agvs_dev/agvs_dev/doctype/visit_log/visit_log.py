@@ -9,8 +9,8 @@ class VisitLog(Document):
         # Run this ONLY for Visit Log
         if self.doctype == "Visit Log":
 
-            # Demo Installation uses demo_qty, not refill_qty — skip this validation
-            if self.visit_type == "Demo Installation":
+            # Demo types don't consume from employee warehouse — skip stock validation
+            if self.visit_type in ("Demo Installation", "Demo Uninstallation"):
                 return
 
             # get warehouse from the correct field
@@ -389,8 +389,8 @@ class VisitLog(Document):
 
     # Stock Entry auto consumed entry
     def _stock_entry_auto_consumed_entry(self):
-        # Demo Installation creates its own entries via _auto_create_demo_installation_entries
-        if self.visit_type == "Demo Installation":
+        # Demo types handle their own entries — skip Material Issue creation
+        if self.visit_type in ("Demo Installation", "Demo Uninstallation"):
             return
 
         # # CREATE MATERIAL ISSUE STOCK ENTRY FROM VISIT LOG
@@ -557,13 +557,18 @@ class VisitLog(Document):
                 frappe.throw("Cannot submit Visit Log. Complete the following first:<br><ul>" + "".join(["<li>" + e + "</li>" for e in errors]) + "</ul>")
 
     def _get_employee_warehouse(self):
-        """Fetch the warehouse assigned to the Visit Log's assign_to user via Warehouse.custom_user."""
         if not self.assign_to:
             return None
         return frappe.db.get_value("Warehouse", {"custom_user": self.assign_to}, "name")
 
+    def _get_employee_location(self):
+        if not self.assign_to:
+            return None
+        return frappe.db.get_value("Location", {"custom_user": self.assign_to}, "name")
+
     # Auto-create Asset Movement + Stock Entry when Demo Installation Visit Log is submitted
     def _auto_create_demo_installation_entries(self):
+        print(f"Auto-create entries for Demo Installation: Visit Type = {self.visit_type}, Machine Installation = {self.machine_installation}")
         if self.visit_type != "Demo Installation":
             return
 
@@ -571,8 +576,8 @@ class VisitLog(Document):
             frappe.throw("Machine Installation is not linked to this Visit Log.")
 
         mi = frappe.get_doc("Machine Installation and Un-Installation", self.machine_installation)
-        demo_location = self.target_location or mi.get("client_location") or ""
-        demo_warehouse = mi.get("material_warehouse") or None
+        demo_location = mi.get("client_location") or ""
+        demo_warehouse = mi.get("client_warehouse") or None
         employee_warehouse = self._get_employee_warehouse()
 
         # 1. Asset Movement (Transfer) — asset goes from employee location to demo location
@@ -711,8 +716,8 @@ class VisitLog(Document):
 
         mi = frappe.get_doc("Machine Installation and Un-Installation", self.machine_installation)
         demo_location = mi.get("client_location") or ""
-        employee_location = self.target_location or ""
-        demo_warehouse = mi.get("material_warehouse") or None
+        employee_location = self._get_employee_location() or ""
+        demo_warehouse = mi.get("client_warehouse") or None
 
         # 1. Asset Movement (Transfer) — asset returns from demo location to employee location
         am_exists = frappe.db.exists("Asset Movement", {
@@ -743,26 +748,28 @@ class VisitLog(Document):
                 am.submit()
 
         # 2. Stock Entry (Material Transfer) — from demo warehouse to employee warehouse
+        # Use existing_qty from VL maintenance items (filled by user before submit)
         employee_warehouse = self._get_employee_warehouse()
-        items = []
-        for row in (self.custom_asset_maintenance_item or []):
-            if row.item_code and (row.demo_qty or 0) > 0:
-                items.append({
-                    "item_code": row.item_code,
-                    "qty": row.demo_qty,
-                    "uom": row.uom or "Nos",
-                    "s_warehouse": demo_warehouse,
-                    "t_warehouse": employee_warehouse,
-                    "custom_visit_log": self.name
-                })
 
-        if items:
-            se_exists = frappe.db.exists("Stock Entry", {
-                "custom_visit_log": self.name,
-                "stock_entry_type": "Material Transfer",
-                "docstatus": 1
-            })
-            if not se_exists:
+        se_exists = frappe.db.exists("Stock Entry", {
+            "custom_visit_log": self.name,
+            "stock_entry_type": "Material Transfer",
+            "docstatus": 1
+        })
+        if not se_exists:
+            items = []
+            for row in (self.custom_asset_maintenance_item or []):
+                if row.item_code and (row.existing_qty or 0) > 0:
+                    items.append({
+                        "item_code": row.item_code,
+                        "qty": row.existing_qty,
+                        "uom": row.uom or "Nos",
+                        "s_warehouse": demo_warehouse,
+                        "t_warehouse": employee_warehouse,
+                        "custom_visit_log": self.name
+                    })
+
+            if items:
                 se = frappe.get_doc({
                     "doctype": "Stock Entry",
                     "stock_entry_type": "Material Transfer",

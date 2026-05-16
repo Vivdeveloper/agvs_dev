@@ -232,7 +232,7 @@ function create_asset_receipt(frm) {
 
     frappe.new_doc('Asset Movement', {}, function (new_doc) {
         new_doc.purpose                     = "Receipt";
-        new_doc.company                     = doc.company || "AGVS ENTERPRISES PVT LTD";
+        new_doc.company                     = doc.company;
         new_doc.custom_machine_installation = doc.name;
         new_doc.assets                      = [];
 
@@ -269,7 +269,7 @@ function create_material_receipt(frm) {
         new_doc.naming_series               = "MAT-STE-.YYYY.-";
         new_doc.stock_entry_type            = "Material Receipt";
         new_doc.purpose                     = "Material Receipt";
-        new_doc.company                     = doc.company || "AGVS ENTERPRISES PVT LTD";
+        new_doc.company                     = doc.company;
         new_doc.custom_machine_installation = doc.name;
         new_doc.items                       = [];
 
@@ -333,7 +333,7 @@ frappe.ui.form.on("Machine Installation and Un-Installation", {
             // }, __("Create"));
             if (frm.doc.installation_type === "Installation") {
 
-                frm.add_custom_button(__("Asset Issue"), () => {
+                frm.add_custom_button(__("Asset Transfer"), () => {
                     create_asset_issue(frm);
                 }, __("Create"));
 
@@ -349,13 +349,30 @@ frappe.ui.form.on("Machine Installation and Un-Installation", {
             // Demo Installation buttons
             if (frm.doc.installation_type === "Demo Installation") {
 
-                frm.add_custom_button(__("Asset Issue"), () => {
+                frm.add_custom_button(__("Asset Transfer"), () => {
                     create_asset_issue(frm);
                 }, __("Create"));
 
                 frm.add_custom_button(__("Material Transfer"), () => {
                     create_material_issue(frm);
                 }, __("Create"));
+
+                // Show "Submit to Company" only after Demo Uninstallation VL is submitted
+                frappe.db.get_list("Visit Log", {
+                    filters: {
+                        machine_installation: frm.doc.name,
+                        visit_type: "Demo Uninstallation",
+                        docstatus: 1
+                    },
+                    fields: ["name"],
+                    limit: 1
+                }).then(res => {
+                    if (res && res.length > 0) {
+                        frm.add_custom_button(__("Submit to Company"), () => {
+                            create_return_to_company(frm);
+                        });
+                    }
+                });
             }
 
             frm.page.btn_secondary
@@ -656,7 +673,7 @@ function create_maintenance_schedule(frm) {
 
                 setTimeout(() => {
                     let nfrm = cur_frm;
-                    nfrm.set_value("company",                    frm.doc.company || "AGVS ENTERPRISES PVT LTD");
+                    nfrm.set_value("company",                    frm.doc.company);
                     nfrm.set_value("custom_machine_installation", frm.doc.name);
                     nfrm.set_value("customer",                   frm.doc.customer || "");
                     nfrm.set_value("contact_person",             frm.doc.contact_person || "");
@@ -791,16 +808,19 @@ function createMaterialRequestFromMI(frm) {
 }
 
 // ===============================
-// Asset Movement (Issue)
+// Asset Movement (Issue for Installation, Transfer for Demo Installation)
 // ===============================
 function create_asset_issue(frm) {
+    const is_demo = frm.doc.installation_type === "Demo Installation";
+    const purpose = is_demo ? "Transfer" : "Issue";
+
     frappe.call({
         method: "frappe.client.get_list",
         args: {
             doctype: "Asset Movement",
             filters: {
                 custom_machine_installation: frm.doc.name,
-                purpose: "Issue",
+                purpose: purpose,
                 docstatus: ["!=", 2]
             },
             fields: ["name"],
@@ -830,22 +850,31 @@ function create_asset_issue(frm) {
                 return;
             }
 
-            frappe.new_doc("Asset Movement", {}, async (doc) => {
-                doc.purpose                     = "Issue";
-                doc.company                     = "AGVS ENTERPRISES PVT LTD";
-                doc.custom_machine_installation = frm.doc.name;
-                doc.assets = [];
+            // Fetch employee's Location via Location.custom_user = assigned_to
+            frappe.db.get_list("Location", {
+                filters: { custom_user: frm.doc.assigned_to },
+                fields: ["name"],
+                limit: 1
+            }).then(loc_res => {
+                const employee_location = (loc_res && loc_res[0]) ? loc_res[0].name : "";
 
-                for (let row of machine_items) {
-                    if (!row.asset) continue;
-                    let asset_doc = await frappe.db.get_doc("Asset", row.asset);
-                    let child             = frappe.model.add_child(doc, "assets");
-                    child.asset           = row.asset;
-                    child.source_location = asset_doc.location || "";
-                    child.target_location    = frm.doc.client_location || "";
-                }
+                frappe.new_doc("Asset Movement", {}, async (doc) => {
+                    doc.purpose                     = purpose;
+                    doc.company                     = frm.doc.company;
+                    doc.custom_machine_installation = frm.doc.name;
+                    doc.assets = [];
 
-                frappe.set_route("Form", "Asset Movement", doc.name);
+                    for (let row of machine_items) {
+                        if (!row.asset) continue;
+                        let asset_doc = await frappe.db.get_doc("Asset", row.asset);
+                        let child             = frappe.model.add_child(doc, "assets");
+                        child.asset           = row.asset;
+                        child.source_location = asset_doc.location || "";
+                        child.target_location = employee_location;
+                    }
+
+                    frappe.set_route("Form", "Asset Movement", doc.name);
+                });
             });
         }
     });
@@ -892,56 +921,98 @@ function create_material_issue(frm) {
                 return;
             }
 
-            frappe.new_doc("Stock Entry", {}, (doc) => {
-                doc.naming_series               = "MAT-STE-.YYYY.-";
-                doc.stock_entry_type            = "Material Transfer";
-                doc.purpose                     = "Material Transfer";
-                doc.company                     = "AGVS ENTERPRISES PVT LTD";
-                doc.custom_machine_installation = frm.doc.name;
+            // Fetch employee warehouse via Warehouse.custom_user = assigned_to
+            frappe.db.get_list("Warehouse", {
+                filters: { custom_user: frm.doc.assigned_to },
+                fields: ["name"],
+                limit: 1
+            }).then(wh_res => {
+                const employee_warehouse = (wh_res && wh_res[0]) ? wh_res[0].name : "";
 
-                // ── Clear default blank row ──
-                doc.items = [];
+                frappe.new_doc("Stock Entry", {}, (doc) => {
+                    doc.naming_series               = "MAT-STE-.YYYY.-";
+                    doc.stock_entry_type            = "Material Transfer";
+                    doc.purpose                     = "Material Transfer";
+                    doc.company                     = frm.doc.company;
+                    doc.custom_machine_installation = frm.doc.name;
 
-                let pending = items.length;
+                    doc.items = [];
 
-                items.forEach(row => {
-                    frappe.call({
-                        method: "frappe.client.get",
-                        args: { doctype: "Item", name: row.item_code || row.item },
-                        callback(r) {
-                            if (r.message) {
-                                let item_doc          = r.message;
-                                let uom               = item_doc.stock_uom;
-                                let conversion_factor = 1;
+                    let pending = items.length;
 
-                                if (item_doc.uoms && item_doc.uoms.length > 0) {
-                                    uom               = item_doc.uoms[0].uom;
-                                    conversion_factor = item_doc.uoms[0].conversion_factor;
+                    items.forEach(row => {
+                        frappe.call({
+                            method: "frappe.client.get",
+                            args: { doctype: "Item", name: row.item_code || row.item },
+                            callback(r) {
+                                if (r.message) {
+                                    let item_doc          = r.message;
+                                    let uom               = item_doc.stock_uom;
+                                    let conversion_factor = 1;
+
+                                    if (item_doc.uoms && item_doc.uoms.length > 0) {
+                                        uom               = item_doc.uoms[0].uom;
+                                        conversion_factor = item_doc.uoms[0].conversion_factor;
+                                    }
+
+                                    let qty   = Number(row.issued_qty);
+                                    let child = frappe.model.add_child(doc, "items");
+
+                                    child.item_code         = row.item_code || row.item;
+                                    child.qty               = qty;
+                                    child.uom               = uom;
+                                    child.stock_uom         = item_doc.stock_uom;
+                                    child.conversion_factor = conversion_factor;
+                                    child.transfer_qty      = qty * conversion_factor;
+                                    child.s_warehouse       = frm.doc.material_warehouse;
+                                    child.t_warehouse       = employee_warehouse;
                                 }
 
-                                let qty   = Number(row.issued_qty);
-                                let child = frappe.model.add_child(doc, "items");
-
-                                child.item_code         = row.item_code || row.item;
-                                child.qty               = qty;
-                                child.uom               = uom;
-                                child.stock_uom         = item_doc.stock_uom;
-                                child.conversion_factor = conversion_factor;
-                                child.transfer_qty      = qty * conversion_factor;
-                                child.s_warehouse       = frm.doc.material_warehouse;
-                                child.t_warehouse       = "";
+                                pending--;
+                                if (pending === 0) {
+                                    frappe.set_route("Form", "Stock Entry", doc.name);
+                                }
                             }
-
-                            pending--;
-                            if (pending === 0) {
-                                frappe.set_route("Form", "Stock Entry", doc.name);
-                            }
-                        }
+                        });
                     });
                 });
-            });
+            }); // end warehouse fetch
         }
     });
+}
+
+// ===============================
+// Submit to Company — return asset + stock from employee back to company
+// ===============================
+function create_return_to_company(frm) {
+    frappe.confirm(
+        __("This will create an Asset Movement (Transfer) and a Stock Entry (Material Transfer) to return the demo asset and refill stock back to the company. Proceed?"),
+        () => {
+            frappe.call({
+                method: "agvs_dev.agvs_dev.doctype.machine_installation_and_un_installation.machine_installation_and_un_installation.create_return_to_company",
+                args: { mi_name: frm.doc.name },
+                freeze: true,
+                freeze_message: __("Creating return entries..."),
+                callback(r) {
+                    if (!r.exc && r.message) {
+                        let links = [];
+                        if (r.message.am) {
+                            links.push(`Asset Movement: <a href="/app/asset-movement/${r.message.am}" target="_blank">${r.message.am}</a>`);
+                        }
+                        if (r.message.se) {
+                            links.push(`Stock Entry: <a href="/app/stock-entry/${r.message.se}" target="_blank">${r.message.se}</a>`);
+                        }
+                        frappe.msgprint({
+                            title: __("Submitted to Company"),
+                            indicator: "green",
+                            message: links.join("<br>") || __("No entries were created.")
+                        });
+                        frm.reload_doc();
+                    }
+                }
+            });
+        }
+    );
 }
 
 // === Fetch Dates to Opportunity  ===
@@ -1228,10 +1299,10 @@ function set_asset_query(frm) {
 }
 
 // === Maintenance team  ===
-frappe.ui.form.on('Machine Installation and Un-Installation', {
-    refresh: set_user_filter,
-    maintenance_team: set_user_filter
-});
+// frappe.ui.form.on('Machine Installation and Un-Installation', {
+//     refresh: set_user_filter,
+//     maintenance_team: set_user_filter
+// });
 
 function set_user_filter(frm) {
     if (!frm.doc.maintenance_team) return;

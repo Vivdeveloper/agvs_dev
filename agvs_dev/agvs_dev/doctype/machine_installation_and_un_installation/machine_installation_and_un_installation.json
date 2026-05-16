@@ -30,6 +30,7 @@
   "contract_start_date",
   "contract_end_date",
   "no_of_visits",
+  "client_warehouse",
   "section_break_kqqi",
   "machine_items",
   "section_break_gtwf",
@@ -122,6 +123,7 @@
    "description": "If Client Wants to Continue using the Product",
    "fieldname": "continue_with_subscription",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Continue with Subscription",
    "read_only": 1
   },
@@ -176,7 +178,8 @@
    "fieldname": "actual_installation_date",
    "fieldtype": "Datetime",
    "label": "Actual Installation Date",
-   "no_copy": 1
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "depends_on": "eval:doc.installation_type == \"Demo Installation\" || doc.installation_type == \"Uninstallation\"",
@@ -191,7 +194,8 @@
    "fieldname": "actual_uninstallation_date",
    "fieldtype": "Datetime",
    "label": "Actual Uninstallation Date",
-   "no_copy": 1
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "client_location",
@@ -310,7 +314,8 @@
    "default": "0",
    "fieldname": "asset_issue_done",
    "fieldtype": "Check",
-   "label": "Asset Issue Done",
+   "hidden": 1,
+   "label": "Asset Transfer Done",
    "read_only": 1
   },
   {
@@ -318,6 +323,7 @@
    "default": "0",
    "fieldname": "material_issue_done",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Material Issue Done",
    "read_only": 1
   },
@@ -326,6 +332,7 @@
    "default": "0",
    "fieldname": "asset_transfer_done",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Asset Transfer Done",
    "read_only": 1
   },
@@ -334,8 +341,15 @@
    "default": "0",
    "fieldname": "material_transfer_done",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Material Transfer Done",
    "read_only": 1
+  },
+  {
+   "fieldname": "client_warehouse",
+   "fieldtype": "Link",
+   "label": "Client warehouse",
+   "options": "Warehouse"
   }
  ],
  "grid_page_length": 50,
@@ -357,7 +371,7 @@
    "link_fieldname": "custom_machine_installation"
   }
  ],
- "modified": "2026-05-14 19:55:36.409755",
+ "modified": "2026-05-16 08:06:52.911403",
  "modified_by": "Administrator",
  "module": "agvs_dev",
  "name": "Machine Installation and Un-Installation",

@@ -11,7 +11,8 @@ def on_submit(doc, method=None):
     except Exception:
         return
 
-    if mi_doc.installation_type in ("Installation", "Demo Installation") and doc.purpose == "Issue":
+    if (mi_doc.installation_type == "Installation" and doc.purpose == "Issue") or \
+       (mi_doc.installation_type == "Demo Installation" and doc.purpose == "Transfer"):
         frappe.db.set_value(
             "Machine Installation and Un-Installation",
             mi_name,

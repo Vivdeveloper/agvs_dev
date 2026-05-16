@@ -1,5 +1,10 @@
 // === Annual Revenue Calculation  ===
 frappe.ui.form.on('Opportunity', {
+    onload: function(frm) {
+        if (frm.is_new()) {
+            frm.set_value('opportunity_type', '');
+        }
+    },
     custom_months(frm) {
         calculate_opportunity_amount(frm);
     },
