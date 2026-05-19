@@ -142,6 +142,27 @@ frappe.ui.form.on('Opportunity', {
                         frm.set_value('referenceable', lead.referenceable);
                         frm.set_value('request_type', lead.request_type);
                         frm.set_value('industry', lead.industry);
+
+                        // Auto-fetch address from Lead
+                        frappe.call({
+                            method: 'frappe.contacts.doctype.address.address.get_default_address',
+                            args: { doctype: 'Lead', name: frm.doc.lead },
+                            callback: function(addr_r) {
+                                if (addr_r.message) {
+                                    frm.set_value('customer_address', addr_r.message);
+                                } else {
+                                    let parts = [
+                                        lead.custom_address_link,
+                                        lead.city,
+                                        lead.state,
+                                        lead.country
+                                    ].filter(Boolean);
+                                    if (parts.length) {
+                                        frm.set_value('address_display', parts.join('\n'));
+                                    }
+                                }
+                            }
+                        });
                     }
                 }
             });

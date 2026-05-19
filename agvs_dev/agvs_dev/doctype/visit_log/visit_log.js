@@ -1,10 +1,24 @@
-// === Auto-fetch items from Machine Installation ===
+// === Auto-fetch items and address from Machine Installation ===
 frappe.ui.form.on('Visit Log', {
     machine_installation(frm) {
         if (!frm.doc.machine_installation) return;
         fetch_items_from_mi(frm);
+        fetch_address_from_mi(frm);
     }
 });
+
+function fetch_address_from_mi(frm) {
+    frappe.db.get_value(
+        'Machine Installation and Un-Installation',
+        frm.doc.machine_installation,
+        'address_display',
+        function(r) {
+            if (r && r.address_display) {
+                frm.set_value('custom_address_display', r.address_display);
+            }
+        }
+    );
+}
 
 function fetch_items_from_mi(frm) {
     frappe.db.get_doc('Machine Installation and Un-Installation', frm.doc.machine_installation)

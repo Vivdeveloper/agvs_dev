@@ -9,6 +9,22 @@ class VisitLog(Document):
         # Run this ONLY for Visit Log
         if self.doctype == "Visit Log":
 
+            # Draft VL cannot be saved with status "Completed" unless conditions are met
+            if self.maintenance_status == "Completed":
+                if self.visit_type == "Demo Uninstallation" and self.machine_installation:
+                    install_submitted = frappe.db.exists("Visit Log", {
+                        "machine_installation": self.machine_installation,
+                        "visit_type": "Demo Installation",
+                        "docstatus": 1
+                    })
+                    if not install_submitted:
+                        frappe.throw(
+                            "Cannot save Demo Uninstallation as <b>Completed</b>: "
+                            "a submitted <b>Demo Installation</b> Visit Log must exist first."
+                        )
+                else:
+                    frappe.throw("Cannot save Visit Log with status <b>Completed</b> in draft. Submit the document to mark it as Completed.")
+
             # These types don't need refill_qty validation — skip stock validation
             if self.visit_type in ("Demo Installation", "Demo Uninstallation", "Installation", "Uninstallation"):
                 return
@@ -45,7 +61,12 @@ class VisitLog(Document):
                         )
 
     def before_submit(self):
+        # Run all validations first — so maintenance_status is never set if validation fails
         self._ai_and_mi_in_demo()
+        self._validation_for_ar_and_mr_uninstallation()
+        self._validation_for_demo_machine_installation()
+        self._validation_for_demo_machine_uninstallation()
+        # After all validations pass, set status and create entries
         # self._checkbox_in_mi()
         self._fetch_today_date_from_custom_completion_date()
         self._fetch_value_to_asset_in_visit_log()
@@ -54,9 +75,6 @@ class VisitLog(Document):
         self._auto_create_demo_installation_entries()
         self._auto_create_uninstallation_entries()
         self._auto_create_demo_uninstallation_entries()
-        self._validation_for_ar_and_mr_uninstallation()
-        self._validation_for_demo_machine_installation()
-        self._validation_for_demo_machine_uninstallation()
 
     # AI and MI in Demo
     def _ai_and_mi_in_demo(self):
@@ -577,6 +595,18 @@ class VisitLog(Document):
             if not mi_name:
                 frappe.throw("Machine Installation is not linked to this Visit Log.")
 
+            # Demo Installation VL must be submitted before Demo Uninstallation can be submitted
+            install_submitted = frappe.db.exists("Visit Log", {
+                "machine_installation": mi_name,
+                "visit_type": "Demo Installation",
+                "docstatus": 1
+            })
+            if not install_submitted:
+                frappe.throw(
+                    "Cannot submit Demo Uninstallation Visit Log: "
+                    "a submitted <b>Demo Installation</b> Visit Log must exist for this Machine Installation first."
+                )
+
             errors = []
 
             am_list = frappe.get_list("Asset Movement", filters={
@@ -615,7 +645,7 @@ class VisitLog(Document):
             new_status = None
 
             if self.visit_type == "Installation":
-                new_status = "Installed"
+                new_status = "Completed"
 
             elif self.visit_type == "Demo Installation":
                 uninstall_done = frappe.db.exists("Visit Log", {
@@ -630,11 +660,13 @@ class VisitLog(Document):
                 new_status = "Demo Uninstallation Completed"
 
             if new_status:
+                update_fields = {"status": new_status}
+                if self.visit_type == "Installation":
+                    update_fields["continue_with_subscription"] = 1
                 frappe.db.set_value(
                     "Machine Installation and Un-Installation",
                     self.machine_installation,
-                    "status",
-                    new_status,
+                    update_fields,
                     update_modified=False
                 )
         except Exception:

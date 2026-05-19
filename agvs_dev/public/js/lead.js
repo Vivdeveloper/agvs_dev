@@ -1,3 +1,14 @@
+
+
+// === Render Address & Contact widget (New Address button) ===
+frappe.ui.form.on('Lead', {
+    refresh(frm) {
+        if (!frm.is_new()) {
+            frappe.contacts.render_address_and_contact(frm);
+        }
+    }
+});
+
 // === Hide Create Button in Lead When unqualified  ===
 frappe.ui.form.on('Lead', {
     refresh(frm) {

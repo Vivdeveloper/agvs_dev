@@ -132,29 +132,9 @@ class MachineInstallationandUnInstallation(Document):
         
         
         
-        if self.installation_type == "Installation":
-            errors = []
-
-            am_list = frappe.get_list("Asset Movement", filters={
-                "custom_machine_installation": self.name,
-                "purpose": "Transfer",
-                "docstatus": 1
-            }, fields=["name"], limit_page_length=1)
-
-            se_list = frappe.get_list("Stock Entry", filters={
-                "custom_machine_installation": self.name,
-                "stock_entry_type": "Material transfer",
-                "docstatus": 1
-            }, fields=["name"], limit_page_length=1)
-
-            if not am_list:
-                errors.append("Asset Issue (Asset Movement) has not been created or submitted yet.")
-
-            if not se_list:
-                errors.append("Material Issue (Stock Entry) has not been created or submitted yet.")
-
-            if errors:
-                frappe.throw("Cannot submit. Complete the following first:<br><ul>" + "".join(["<li>" + e + "</li>" for e in errors]) + "</ul>")
+        # Installation type: AM + SE are created when the Visit Log is submitted (after MI submit),
+        # so no pre-submit validation is needed here.
+        pass
 
     # Auto Create Visit log for Demo
     def _get_se_target_warehouse(self):
@@ -289,7 +269,6 @@ class MachineInstallationandUnInstallation(Document):
         self._auto_create_visit_logs_for_installation_and_uninstallation()
         self._auto_create_vl_after_save_for_uninstallation()
         self._checkboxes_in_mi()
-        self._opportunity_update()
 
     # Auto create visit logs for Installation and Uninstallation
     def _auto_create_visit_logs_for_installation_and_uninstallation(self):
@@ -532,6 +511,52 @@ class MachineInstallationandUnInstallation(Document):
                     "custom_demo_installation_date": self.planned_installation_date
                 }
             )
+
+
+@frappe.whitelist()
+def get_available_assets(doctype, txt, searchfield, start, page_len, filters):
+    import json
+    from frappe.utils import cint
+
+    if isinstance(filters, str):
+        filters = json.loads(filters)
+
+    machine_type = filters.get("custom_machine_type", "")
+    location = filters.get("location", "")
+
+    occupied = frappe.db.sql_list("""
+        SELECT DISTINCT mi_item.asset
+        FROM `tabMachine Item` mi_item
+        INNER JOIN `tabMachine Installation and Un-Installation` mi
+            ON mi.name = mi_item.parent
+        WHERE mi.docstatus = 1
+          AND mi.status NOT IN ('Completed', 'Demo Uninstallation Completed')
+          AND mi_item.asset IS NOT NULL
+          AND mi_item.asset != ''
+    """)
+
+    type_clause = ""
+    if machine_type:
+        type_clause = f"AND a.custom_machine_type = {frappe.db.escape(machine_type)}"
+
+    location_clause = ""
+    if location:
+        location_clause = f"AND a.location = {frappe.db.escape(location)}"
+
+    occupied_clause = ""
+    if occupied:
+        escaped = ", ".join(frappe.db.escape(o) for o in occupied)
+        occupied_clause = f"AND a.name NOT IN ({escaped})"
+
+    return frappe.db.sql(f"""
+        SELECT a.name, a.asset_name
+        FROM `tabAsset` a
+        WHERE (a.name LIKE %(txt)s OR a.asset_name LIKE %(txt)s)
+          {location_clause}
+          {type_clause}
+          {occupied_clause}
+        LIMIT %(start)s, %(page_len)s
+    """, {"txt": f"%{txt}%", "start": cint(start), "page_len": cint(page_len)})
 
 
 @frappe.whitelist()

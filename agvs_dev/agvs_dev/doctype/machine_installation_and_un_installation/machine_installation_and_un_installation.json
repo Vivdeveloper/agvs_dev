@@ -101,6 +101,7 @@
    "label": "Contact Mobile"
   },
   {
+   "fetch_from": "sales_order.address_display",
    "fetch_if_empty": 1,
    "fieldname": "address_display",
    "fieldtype": "Small Text",
@@ -170,7 +171,7 @@
    "depends_on": "eval:[\"Demo Installation\", \"Installation\"].includes(doc.installation_type)",
    "fieldname": "planned_installation_date",
    "fieldtype": "Date",
-   "label": "Plan Installation Date",
+   "label": "Planned Installation Date",
    "no_copy": 1
   },
   {

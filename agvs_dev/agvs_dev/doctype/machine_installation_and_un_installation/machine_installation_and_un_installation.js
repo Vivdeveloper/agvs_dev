@@ -1099,6 +1099,18 @@ frappe.ui.form.on('Machine Installation and Un-Installation', {
             if (!route_type && !frm.doc.installation_type) {
                 frm.set_value('installation_type', 'Installation');
             }
+
+            // Auto-fetch address from Sales Order if not already set
+            if (!frm.doc.address_display) {
+                frappe.db.get_value('Sales Order', frm.doc.sales_order, 'address_display', function(r) {
+                    if (r && r.address_display) {
+                        let clean = (r.address_display || '')
+                            .replace(/<br\s*\/?>/gi, '\n')
+                            .replace(/<\/?[^>]+(>|$)/g, '');
+                        frm.set_value('address_display', clean.trim());
+                    }
+                });
+            }
         }
     },
     reference_name(frm) {
@@ -1332,20 +1344,13 @@ frappe.ui.form.on("Machine Installation and Un-Installation", {
 });
 
 function set_asset_query(frm) {
+    const machine_type = frm.doc.installation_type === "Demo Installation" ? "Demo" : "Regular";
 
-    if (frm.doc.installation_type === "Demo Installation") {
-
-        frm.set_query("asset", "machine_items", {
-            filters: {
-                custom_machine_type: "Demo"
-            }
-        });
-
-    } else {
-
-        // Clear filter → show all
-        frm.set_query("asset", "machine_items", {});
-    }
+    frm.set_query("asset", "machine_items", {
+        query: "agvs_dev.agvs_dev.doctype.machine_installation_and_un_installation.machine_installation_and_un_installation.get_available_assets",
+        filters: { custom_machine_type: machine_type,location :"Office"
+         }
+    });
 }
 
 // === Maintenance team  ===
@@ -1486,13 +1491,9 @@ frappe.ui.form.on("Machine Installation and Un-Installation", {
 // === Office hide from client location  ===
 frappe.ui.form.on("Machine Installation and Un-Installation", {
     refresh(frm) {
-        if (frm.doc.installation_type === "Demo Installation") {
-            frm.set_query("client_location", () => ({
-                filters: {
-                    name: ["!=", "Office"]
-                }
-            }));
-        }
+        frm.set_query("client_location", () => ({
+            filters: { name: ["!=", "Office"] }
+        }));
     }
 });
 
@@ -1878,13 +1879,15 @@ frappe.ui.form.on('Machine Installation and Un-Installation', {
                 }
             });
 
-            // ✅ SET VALUES
-            if (install_date) {
-                frm.set_value('actual_installation_date', install_date);
+            // Set without making form dirty
+            if (install_date && frm.doc.actual_installation_date !== install_date) {
+                frm.doc.actual_installation_date = install_date;
+                frm.refresh_field('actual_installation_date');
             }
 
-            if (uninstall_date) {
-                frm.set_value('actual_uninstallation_date', uninstall_date);
+            if (uninstall_date && frm.doc.actual_uninstallation_date !== uninstall_date) {
+                frm.doc.actual_uninstallation_date = uninstall_date;
+                frm.refresh_field('actual_uninstallation_date');
             }
         });
     }

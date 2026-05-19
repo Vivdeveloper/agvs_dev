@@ -29,13 +29,16 @@ doctype_js = {
 	"Maintenance Schedule": "public/js/maintenance_schedule.js",
 	"Material Request": "public/js/material_request.js",
 	"Opportunity": "public/js/opportunity.js",
+	"Quotation": "public/js/quotation.js",
 	"Sales Order": "public/js/sales_order.js",
+	"Stock Entry": "public/js/stock_entry.js",
 }
 
 # Server Script Events for standard ERPNext doctypes
 # (custom doctypes handle events via their Python controller class)
 doc_events = {
 	"Asset": {
+		"validate": "agvs_dev.agvs_dev.events.asset.validate",
 		"on_submit": "agvs_dev.agvs_dev.events.asset.fetch_existing_balance",
 	},
 	"Asset Maintenance Log": {
