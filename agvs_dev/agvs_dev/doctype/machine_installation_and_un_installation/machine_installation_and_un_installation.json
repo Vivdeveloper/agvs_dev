@@ -202,7 +202,7 @@
   {
    "fieldname": "client_location",
    "fieldtype": "Link",
-   "label": "Client Location",
+   "label": "Target Location",
    "no_copy": 1,
    "options": "Location"
   },
@@ -261,7 +261,7 @@
    "allow_on_submit": 1,
    "fieldname": "material_warehouse",
    "fieldtype": "Link",
-   "label": "Material Warehouse",
+   "label": "Source Material Warehouse",
    "options": "Warehouse"
   },
   {
@@ -348,6 +348,7 @@
    "read_only": 1
   },
   {
+   "default": "0",
    "fieldname": "submitted_to_company",
    "fieldtype": "Check",
    "label": "Submitted to Company",
@@ -356,7 +357,7 @@
   {
    "fieldname": "client_warehouse",
    "fieldtype": "Link",
-   "label": "Client warehouse",
+   "label": "Target warehouse (Demo/Customer)",
    "options": "Warehouse"
   }
  ],
@@ -379,7 +380,7 @@
    "link_fieldname": "custom_machine_installation"
   }
  ],
- "modified": "2026-05-16 10:54:42.351651",
+ "modified": "2026-05-20 15:11:37.578934",
  "modified_by": "Administrator",
  "module": "agvs_dev",
  "name": "Machine Installation and Un-Installation",
