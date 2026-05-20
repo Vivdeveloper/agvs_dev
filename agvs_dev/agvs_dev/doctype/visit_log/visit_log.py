@@ -9,21 +9,18 @@ class VisitLog(Document):
         # Run this ONLY for Visit Log
         if self.doctype == "Visit Log":
 
-            # Draft VL cannot be saved with status "Completed" unless conditions are met
-            if self.maintenance_status == "Completed":
-                if self.visit_type == "Demo Uninstallation" and self.machine_installation:
-                    install_submitted = frappe.db.exists("Visit Log", {
-                        "machine_installation": self.machine_installation,
-                        "visit_type": "Demo Installation",
-                        "docstatus": 1
-                    })
-                    if not install_submitted:
-                        frappe.throw(
-                            "Cannot save Demo Uninstallation as <b>Completed</b>: "
-                            "a submitted <b>Demo Installation</b> Visit Log must exist first."
-                        )
-                else:
-                    frappe.throw("Cannot save Visit Log with status <b>Completed</b> in draft. Submit the document to mark it as Completed.")
+            # Demo Uninstallation cannot be saved as Completed unless Demo Installation is submitted
+            if self.maintenance_status == "Completed" and self.visit_type == "Demo Uninstallation" and self.machine_installation:
+                install_submitted = frappe.db.exists("Visit Log", {
+                    "machine_installation": self.machine_installation,
+                    "visit_type": "Demo Installation",
+                    "docstatus": 1
+                })
+                if not install_submitted:
+                    frappe.throw(
+                        "Cannot save Demo Uninstallation as <b>Completed</b>: "
+                        "a submitted <b>Demo Installation</b> Visit Log must exist first."
+                    )
 
             # These types don't need refill_qty validation — skip stock validation
             if self.visit_type in ("Demo Installation", "Demo Uninstallation", "Installation", "Uninstallation"):
@@ -294,6 +291,39 @@ class VisitLog(Document):
             if not self.machine_installation:
                 frappe.throw("Machine Installation is not linked to this Visit Log.")
 
+            # Find Installation MI with same Sales Order as this Uninstallation MI
+            uninstall_mi = frappe.db.get_value(
+                "Machine Installation and Un-Installation",
+                self.machine_installation,
+                ["sales_order", "name"],
+                as_dict=True
+            )
+
+            install_submitted = False
+            if uninstall_mi and uninstall_mi.sales_order:
+                # Find Installation MI(s) for same Sales Order
+                install_mi_list = frappe.get_all(
+                    "Machine Installation and Un-Installation",
+                    filters={
+                        "sales_order": uninstall_mi.sales_order,
+                        "installation_type": "Installation",
+                        "docstatus": 1
+                    },
+                    pluck="name"
+                )
+                if install_mi_list:
+                    install_submitted = frappe.db.exists("Visit Log", {
+                        "machine_installation": ["in", install_mi_list],
+                        "visit_type": "Installation",
+                        "docstatus": 1
+                    })
+
+            if not install_submitted:
+                frappe.throw(
+                    "Cannot submit Uninstallation Visit Log: "
+                    "a submitted <b>Installation</b> Visit Log must exist for this Sales Order first."
+                )
+
     def _get_employee_warehouse(self):
         if not self.assign_to:
             return None
@@ -344,6 +374,8 @@ class VisitLog(Document):
             employee_warehouse = self._get_employee_warehouse()
             mi = frappe.get_doc("Machine Installation and Un-Installation", self.machine_installation) if self.machine_installation else None
             target_warehouse = (mi.get("client_warehouse") if mi else None) or None
+
+            # Build items from VL maintenance table (refill_qty)
             items = []
             for row in (self.custom_asset_maintenance_item or []):
                 if row.item_code and (row.refill_qty or 0) > 0:
@@ -355,6 +387,35 @@ class VisitLog(Document):
                         "t_warehouse": target_warehouse,
                         "custom_visit_log": self.name
                     })
+
+            # Fallback: if VL has no refill items, mirror the MI-level SE
+            # (items transferred from stores → employee warehouse in the pre-submit step)
+            if not items and self.machine_installation:
+                prev_se_name = frappe.db.get_value(
+                    "Stock Entry",
+                    {
+                        "custom_machine_installation": self.machine_installation,
+                        "stock_entry_type": "Material Transfer",
+                        "docstatus": 1
+                    },
+                    "name",
+                    order_by="creation asc"
+                )
+                if prev_se_name:
+                    for item in frappe.db.get_all(
+                        "Stock Entry Detail",
+                        filters={"parent": prev_se_name},
+                        fields=["item_code", "qty", "uom", "t_warehouse"]
+                    ):
+                        items.append({
+                            "item_code": item.item_code,
+                            "qty": item.qty,
+                            "uom": item.uom or "Nos",
+                            "s_warehouse": item.t_warehouse or employee_warehouse,
+                            "t_warehouse": target_warehouse,
+                            "custom_visit_log": self.name
+                        })
+
             if items:
                 se = frappe.get_doc({
                     "doctype": "Stock Entry",
@@ -473,41 +534,8 @@ class VisitLog(Document):
         
         
         
-        if self.visit_type == "Demo Installation":
-        
-            mi_name = self.machine_installation
-        
-            if not mi_name:
-                frappe.throw("Machine Installation is not linked to this Visit Log.")
-        
-            errors = []
-        
-            # Asset Movement check (Transfer — created by _auto_create_demo_installation_entries)
-            am_list = frappe.get_list("Asset Movement", filters={
-                "custom_machine_installation": mi_name,
-                "purpose": "Transfer",
-                "docstatus": 1
-            }, fields=["name"], limit_page_length=1)
-
-            # Stock Entry check
-            se_list = frappe.get_list("Stock Entry", filters={
-                "custom_machine_installation": mi_name,
-                "stock_entry_type": "Material Transfer",
-                "docstatus": 1
-            }, fields=["name"], limit_page_length=1)
-
-            if not am_list:
-                errors.append("Asset Transfer (Asset Movement) has not been created or submitted yet.")
-
-            if not se_list:
-                errors.append("Material Transfer (Stock Entry) has not been created or submitted yet.")
-        
-            if errors:
-                frappe.throw(
-                    "Cannot submit Visit Log. Complete the following first:<br><ul>" +
-                    "".join(["<li>" + e + "</li>" for e in errors]) +
-                    "</ul>"
-                )
+        # AM/SE are auto-created by _auto_create_demo_installation_entries on submit — no pre-check needed
+        pass
 
     # Auto-create Asset Movement (Transfer) + Stock Entry when Demo Uninstallation VL is submitted
     def _auto_create_demo_uninstallation_entries(self):
@@ -643,9 +671,13 @@ class VisitLog(Document):
                 return
 
             new_status = None
+            extra_fields = {}
 
             if self.visit_type == "Installation":
-                new_status = "Completed"
+                new_status = "Installed"
+                extra_fields["continue_with_subscription"] = 1
+
+            # Uninstallation status → "Completed" only after Submit to Company (set there, not here)
 
             elif self.visit_type == "Demo Installation":
                 uninstall_done = frappe.db.exists("Visit Log", {
@@ -660,17 +692,30 @@ class VisitLog(Document):
                 new_status = "Demo Uninstallation Completed"
 
             if new_status:
-                update_fields = {"status": new_status}
-                if self.visit_type == "Installation":
-                    update_fields["continue_with_subscription"] = 1
+                update_fields = {"status": new_status, **extra_fields}
                 frappe.db.set_value(
                     "Machine Installation and Un-Installation",
                     self.machine_installation,
                     update_fields,
                     update_modified=False
                 )
+
+            # Auto-submit MI if still in Draft when Installation VL is submitted
+            if self.visit_type == "Installation":
+                mi_docstatus = frappe.db.get_value(
+                    "Machine Installation and Un-Installation",
+                    self.machine_installation,
+                    "docstatus"
+                )
+                if mi_docstatus == 0:
+                    mi_doc = frappe.get_doc(
+                        "Machine Installation and Un-Installation",
+                        self.machine_installation
+                    )
+                    mi_doc.submit()
+
         except Exception:
-            pass
+            frappe.log_error(frappe.get_traceback(), "Visit Log on_update Error")
 
     # Balance and Capacity Validation Visit log
     def validate(self):

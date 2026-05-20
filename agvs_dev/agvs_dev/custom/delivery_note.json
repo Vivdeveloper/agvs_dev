@@ -1471,6 +1471,17 @@
    "translatable": 0,
    "unique": 0,
    "width": null
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "custom_maintenance_visit",
+   "fieldtype": "Link",
+   "label": "Maintenance Visit",
+   "options": "Maintenance Visit",
+   "insert_after": "amended_from",
+   "read_only": 1,
+   "reqd": 0,
+   "name": "Delivery Note-custom_maintenance_visit"
   }
  ],
  "custom_perms": [],

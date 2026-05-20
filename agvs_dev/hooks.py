@@ -27,6 +27,7 @@ doctype_js = {
 	"Item": "public/js/item.js",
 	"Lead": "public/js/lead.js",
 	"Maintenance Schedule": "public/js/maintenance_schedule.js",
+	"Maintenance Visit": "public/js/maintenance_visit.js",
 	"Material Request": "public/js/material_request.js",
 	"Opportunity": "public/js/opportunity.js",
 	"Quotation": "public/js/quotation.js",
@@ -62,6 +63,10 @@ doc_events = {
 	},
 	"Stock Entry": {
 		"on_submit": "agvs_dev.agvs_dev.events.stock_entry.on_submit",
+	},
+	"Maintenance Visit": {
+		"before_submit": "agvs_dev.agvs_dev.events.maintenance_visit.before_submit",
+		"on_submit": "agvs_dev.agvs_dev.events.maintenance_visit.on_submit",
 	},
 }
 

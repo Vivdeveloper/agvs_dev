@@ -673,31 +673,27 @@ function create_maintenance_schedule(frm) {
             };
 
             const open_ms = (rows, start_date, end_date) => {
-                frappe.new_doc("Maintenance Schedule");
+                frappe.new_doc("Maintenance Schedule", {}, (doc) => {
+                    doc.company                     = frm.doc.company;
+                    doc.custom_machine_installation = frm.doc.name;
+                    doc.customer                    = frm.doc.customer || "";
+                    doc.contact_person              = frm.doc.contact_person || "";
 
-                setTimeout(() => {
-                    let nfrm = cur_frm;
-                    nfrm.set_value("company",                    frm.doc.company);
-                    nfrm.set_value("custom_machine_installation", frm.doc.name);
-                    nfrm.set_value("customer",                   frm.doc.customer || "");
-                    nfrm.set_value("contact_person",             frm.doc.contact_person || "");
-
-                    nfrm.clear_table("items");
-
+                    doc.items = [];
                     rows.forEach(r => {
-                        let row              = nfrm.add_child("items");
-                        row.custom_asset     = r.asset;
+                        let row               = frappe.model.add_child(doc, "Maintenance Schedule Item", "items");
+                        row.custom_asset      = r.asset;
                         row.custom_asset_name = r.asset_name;
-                        row.item_code        = r.item_code;
+                        row.item_code         = r.item_code;
                         row.custom_capacity_qty = r.capacity_qty;
-                        row.start_date       = start_date || "";
-                        row.end_date         = end_date || "";
-                        row.periodicity      = "Monthly";
-                        row.no_of_visits     = frm.doc.no_of_visits || 12;
+                        row.start_date        = start_date || "";
+                        row.end_date          = end_date || "";
+                        row.periodicity       = "Monthly";
+                        row.no_of_visits      = frm.doc.no_of_visits || 12;
                     });
 
-                    nfrm.refresh_field("items");
-                }, 500);
+                    frappe.set_route("Form", "Maintenance Schedule", doc.name);
+                });
             };
 
             if (frm.doc.sales_order) {
@@ -1090,6 +1086,15 @@ function update_opportunity(frm) {
     });
 }
 
+// === Strip HTML from address helper ===
+function strip_address_html(val) {
+    if (!val) return val;
+    return val
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .trim();
+}
+
 // === Auto-set installation_type + fetch dates from Opportunity ===
 frappe.ui.form.on('Machine Installation and Un-Installation', {
     sales_order(frm) {
@@ -1100,17 +1105,12 @@ frappe.ui.form.on('Machine Installation and Un-Installation', {
                 frm.set_value('installation_type', 'Installation');
             }
 
-            // Auto-fetch address from Sales Order if not already set
-            if (!frm.doc.address_display) {
-                frappe.db.get_value('Sales Order', frm.doc.sales_order, 'address_display', function(r) {
-                    if (r && r.address_display) {
-                        let clean = (r.address_display || '')
-                            .replace(/<br\s*\/?>/gi, '\n')
-                            .replace(/<\/?[^>]+(>|$)/g, '');
-                        frm.set_value('address_display', clean.trim());
-                    }
-                });
-            }
+            // Always fetch and clean address from Sales Order
+            frappe.db.get_value('Sales Order', frm.doc.sales_order, 'address_display', function(r) {
+                if (r && r.address_display) {
+                    frm.set_value('address_display', strip_address_html(r.address_display));
+                }
+            });
         }
     },
     reference_name(frm) {
@@ -1121,6 +1121,14 @@ frappe.ui.form.on('Machine Installation and Un-Installation', {
         }
     },
     refresh(frm) {
+        // Strip <br> from address_display if present (happens when fetched from SO server-side)
+        if (frm.doc.address_display && frm.doc.address_display.includes('<')) {
+            const clean = strip_address_html(frm.doc.address_display);
+            if (clean !== frm.doc.address_display) {
+                frm.set_value('address_display', clean);
+            }
+        }
+
         // New MI from Opportunity — fetch planned dates directly from Opportunity
         if (frm.is_new() && frm.doc.reference_name && frm.doc.installation_type === "Demo Installation") {
             frappe.db.get_doc('Opportunity', frm.doc.reference_name).then(opp => {
@@ -1190,7 +1198,7 @@ function _copy_from_installation_mi(frm) {
             if (inst.client_warehouse) frm.set_value('client_warehouse', inst.client_warehouse);
             if (inst.contact_email)    frm.set_value('contact_email',    inst.contact_email);
             if (inst.contact_mobile)   frm.set_value('contact_mobile',   inst.contact_mobile);
-            if (inst.address_display)  frm.set_value('address_display',  inst.address_display);
+            if (inst.address_display)  frm.set_value('address_display',  strip_address_html(inst.address_display));
 
             frm.clear_table('machine_items');
             (inst.machine_items || []).forEach(row => {
@@ -1378,22 +1386,20 @@ function set_user_filter(frm) {
 // === Mark as Completed Button ===
 frappe.ui.form.on("Machine Installation and Un-Installation", {
     refresh(frm) {
+        if (frm.is_new()) return;
+
+        // Show for submitted docs that haven't been marked complete yet
         if (frm.doc.docstatus === 1 && !frm.doc.continue_with_subscription) {
             const needs_return = ["Uninstallation", "Demo Installation"].includes(frm.doc.installation_type);
 
-            // For Uninstallation / Demo Installation: only allow after Submit to Company is done
-            if (needs_return && !frm.doc.submitted_to_company) {
-                return;
-            }
+            // For Uninstallation / Demo Installation: only allow after Submit to Company
+            if (needs_return && !frm.doc.submitted_to_company) return;
 
             frm.add_custom_button(__("Mark as Completed"), () => {
                 frappe.db.set_value(
                     "Machine Installation and Un-Installation",
                     frm.doc.name,
-                    {
-                        status: "Completed",
-                        continue_with_subscription: 1
-                    }
+                    { status: "Completed", continue_with_subscription: 1 }
                 ).then(() => frm.reload_doc());
             });
         }

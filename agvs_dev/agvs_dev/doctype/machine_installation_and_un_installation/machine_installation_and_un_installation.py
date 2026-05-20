@@ -1,16 +1,34 @@
+import re
 import frappe
 from frappe.model.document import Document
+
+
+def _strip_html(value):
+    if not value:
+        return value
+    value = re.sub(r'<br\s*/?>', '\n', value, flags=re.IGNORECASE)
+    value = re.sub(r'<[^>]+>', '', value)
+    return value.strip()
 
 
 class MachineInstallationandUnInstallation(Document):
 
     def before_save(self):
+        # Frappe sometimes sets amended_from to the new doc's temp name on cancel→amend;
+        # clear it if the referenced doc doesn't exist so save doesn't blow up.
+        if self.amended_from and not frappe.db.exists(
+            "Machine Installation and Un-Installation", self.amended_from
+        ):
+            self.amended_from = None
         self._machine_installation_before_save()
         self._machine_satatu_chnage_by_viv()
         self._checkboxes_in_mi()
 
     # machine installation before save
     def _machine_installation_before_save(self):
+        if self.get("address_display"):
+            self.address_display = _strip_html(self.address_display)
+
         for row in self.machine_items:
             if not row.asset:
                 frappe.throw("Asset cannot be blank in Machine Items.")
@@ -33,108 +51,33 @@ class MachineInstallationandUnInstallation(Document):
 
     # AI and MI
     def _ai_and_mi(self):
-        # # # mi_name = doc.custom_machine_installation
-        
-        # # # if mi_name:
-        # # #     mi = frappe.get_doc("Machine Installation and Un-Installation", mi_name)
-        
-        # # #     if mi.installation_type == "Installation":
-        # # #         errors = []
-        
-        # # #         am_list = frappe.get_list("Asset Movement", filters={
-        # # #             "custom_machine_installation": mi_name,
-        # # #             "purpose": "Transfer",
-        # # #             "docstatus": 1
-        # # #         }, fields=["name"], limit_page_length=1)
-        
-        # # #         se_list = frappe.get_list("Stock Entry", filters={
-        # # #             "custom_machine_installation": mi_name,
-        # # #             "stock_entry_type": "Material Issue",
-        # # #             "docstatus": 1
-        # # #         }, fields=["name"], limit_page_length=1)
-        
-        # # #         if not am_list:
-        # # #             errors.append("Asset Movement (Issue) has not been created or submitted yet.")
-        
-        # # #         if not se_list:
-        # # #             errors.append("Stock Entry (Material Issue) has not been created or submitted yet.")
-        
-        # # #         if errors:
-        # # #             frappe.throw("Cannot submit Visit Log. Complete the following first:<br><ul>" + "".join(["<li>" + e + "</li>" for e in errors]) + "</ul>")
-        
-        
-        # # # #
-        
-        
-        
-        
-        
-        
-        # # if doc.installation_type == "Installation":
-        
-        # #     errors = []
-        
-        # #     am_list = frappe.get_list("Asset Movement", filters={
-        # #         "custom_machine_installation": doc.name,
-        # #         "purpose": "Issue",
-        # #         "docstatus": 1
-        # #     }, fields=["name"], limit_page_length=1)
-        
-        # #     se_list = frappe.get_list("Stock Entry", filters={
-        # #         "custom_machine_installation": doc.name,
-        # #         "stock_entry_type": "Material Issue",
-        # #         "docstatus": 1
-        # #     }, fields=["name"], limit_page_length=1)
-        
-        # #     if not am_list:
-        # #         errors.append("Asset Issue (Asset Movement) has not been created or submitted yet.")
-        
-        # #     if not se_list:
-        # #         errors.append("Material Issue (Stock Entry) has not been created or submitted yet.")
-        
-        # #     if errors:
-        # #         frappe.throw("Cannot submit. Complete the following first:<br><ul>" + "".join(["<li>" + e + "</li>" for e in errors]) + "</ul>")
-        
-        
-        
-        # # Save and clear address to bypass Frappe's link validation
-        # saved_address = doc.address
-        # doc.address = None
-        
-        # if doc.installation_type == "Installation":
-        #     errors = []
-        
-        #     am_list = frappe.get_list("Asset Movement", filters={
-        #         "custom_machine_installation": doc.name,
-        #         "purpose": "Issue",
-        #         "docstatus": 1
-        #     }, fields=["name"], limit_page_length=1)
-        
-        #     se_list = frappe.get_list("Stock Entry", filters={
-        #         "custom_machine_installation": doc.name,
-        #         "stock_entry_type": "Material Issue",
-        #         "docstatus": 1
-        #     }, fields=["name"], limit_page_length=1)
-        
-        #     if not am_list:
-        #         errors.append("Asset Issue (Asset Movement) has not been created or submitted yet.")
-        
-        #     if not se_list:
-        #         errors.append("Material Issue (Stock Entry) has not been created or submitted yet.")
-        
-        #     if errors:
-        #         doc.address = saved_address
-        #         frappe.throw("Cannot submit. Complete the following first:<br><ul>" + "".join(["<li>" + e + "</li>" for e in errors]) + "</ul>")
-        
-        # # Restore address in DB after validation passes
-        # frappe.db.set_value("Machine Installation and Un-Installation", doc.name, "address", saved_address)
-        
-        
-        
-        
-        # Installation type: AM + SE are created when the Visit Log is submitted (after MI submit),
-        # so no pre-submit validation is needed here.
-        pass
+        if self.installation_type == "Installation":
+            errors = []
+
+            am_list = frappe.get_list("Asset Movement", filters={
+                "custom_machine_installation": self.name,
+                "purpose": "Transfer",
+                "docstatus": 1
+            }, fields=["name"], limit_page_length=1)
+
+            se_list = frappe.get_list("Stock Entry", filters={
+                "custom_machine_installation": self.name,
+                "stock_entry_type": "Material Transfer",
+                "docstatus": 1
+            }, fields=["name"], limit_page_length=1)
+
+            if not am_list:
+                errors.append("Asset Issue (Asset Movement) has not been created or submitted yet.")
+
+            if not se_list:
+                errors.append("Material Transfer (Stock Entry) has not been created or submitted yet.")
+
+            if errors:
+                frappe.throw(
+                    "Cannot submit. Complete the following first:<br><ul>"
+                    + "".join(["<li>" + e + "</li>" for e in errors])
+                    + "</ul>"
+                )
 
     # Auto Create Visit log for Demo
     def _get_se_target_warehouse(self):
@@ -364,23 +307,23 @@ class MachineInstallationandUnInstallation(Document):
     # Auto create VL after save for uninstallation
     def _auto_create_vl_after_save_for_uninstallation(self):
         if self.installation_type == "Uninstallation":
-        
+
             if not self.machine_items:
                 frappe.throw("Add at least one Machine Item with an Asset.")
-        
+
             if not self.planned_uninstallation_date:
                 frappe.throw("Please add a Planned Uninstallation Date.")
-        
+
             for row in self.machine_items:
                 if not row.asset:
                     frappe.throw("All Machine Items must have an Asset.")
-        
+
                 visit_exists = frappe.db.exists("Visit Log", {
                     "machine_installation": self.name,
                     "asset": row.asset,
                     "visit_type": "Uninstallation"
                 })
-        
+
                 if not visit_exists:
                     frappe.get_doc({
                         "doctype": "Visit Log",
@@ -391,7 +334,7 @@ class MachineInstallationandUnInstallation(Document):
                         "maintenance_date": self.planned_uninstallation_date,
                         "due_date": self.planned_uninstallation_date,
                         "assign_to": self.assigned_to,
-                        "warehouse": self._get_se_target_warehouse(),
+                        "warehouse": self.client_warehouse or None,
                         "contact_email": self.contact_email,
                         "contact_mobile": self.contact_mobile,
                         "custom_address_display": self.address_display
@@ -674,12 +617,15 @@ def create_return_to_company(mi_name):
         se.submit()
         result["se"] = se.name
 
-    # Mark that the asset has been returned to company
+    # Mark returned to company; for Uninstallation MI also set status = Completed
+    update_vals = {"submitted_to_company": 1}
+    if mi.installation_type == "Uninstallation":
+        update_vals["status"] = "Completed"
+
     frappe.db.set_value(
         "Machine Installation and Un-Installation",
         mi_name,
-        "submitted_to_company",
-        1,
+        update_vals,
         update_modified=False
     )
 

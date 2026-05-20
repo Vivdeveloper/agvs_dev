@@ -150,6 +150,7 @@
    "fieldtype": "Section Break"
   },
   {
+   "depends_on": "eval: !['Uninstallation', 'Demo Uninstallation'].includes(doc.visit_type)",
    "fieldname": "warehouse",
    "fieldtype": "Link",
    "label": "Warehouse",
