@@ -1,6 +1,9 @@
 import frappe
 from frappe import _
 
+
+
+
 # create_strength_item
 @frappe.whitelist()
 def create_strength_item(**kwargs):
