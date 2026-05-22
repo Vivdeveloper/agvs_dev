@@ -568,7 +568,7 @@ class VisitLog(Document):
             )
             return
 
-        employee_warehouse = self._get_employee_warehouse()
+        employee_warehouse = self._get_employee_warehouse(company=company)
 
         items = []
 
