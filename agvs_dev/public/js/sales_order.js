@@ -181,6 +181,28 @@ frappe.ui.form.on('Sales Order', {
 // });
 
 
+// === Hide irrelevant standard buttons on submitted Sales/Service Agreement ===
+frappe.ui.form.on('Sales Order', {
+    refresh: function(frm) {
+        if (frm.doc.docstatus === 1) {
+            setTimeout(function() {
+                const buttons_to_hide = [
+                    'Pick List',
+                    'Work Order',
+                    'Material Request',
+                    'Request for Raw Materials',
+                    'Purchase Order',
+                    'Project'
+                ];
+                buttons_to_hide.forEach(function(label) {
+                    frm.remove_custom_button(__(label), __('Create'));
+                    frm.remove_custom_button(__(label));
+                });
+            }, 100);
+        }
+    }
+});
+
 frappe.ui.form.on('Sales Order', {
     refresh: function(frm) {
         if (frm.doc.docstatus === 1) {

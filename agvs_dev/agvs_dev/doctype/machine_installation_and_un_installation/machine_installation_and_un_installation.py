@@ -466,6 +466,12 @@ def get_available_assets(doctype, txt, searchfield, start, page_len, filters):
 
     machine_type = filters.get("custom_machine_type", "")
     location = filters.get("location", "")
+    asset_categories = filters.get("asset_categories", [])
+    if isinstance(asset_categories, str):
+        try:
+            asset_categories = json.loads(asset_categories)
+        except Exception:
+            asset_categories = []
 
     occupied = frappe.db.sql_list("""
         SELECT DISTINCT mi_item.asset
@@ -491,6 +497,11 @@ def get_available_assets(doctype, txt, searchfield, start, page_len, filters):
         escaped = ", ".join(frappe.db.escape(o) for o in occupied)
         occupied_clause = f"AND a.name NOT IN ({escaped})"
 
+    category_clause = ""
+    if asset_categories:
+        escaped_cats = ", ".join(frappe.db.escape(c) for c in asset_categories)
+        category_clause = f"AND a.asset_category IN ({escaped_cats})"
+
     return frappe.db.sql(f"""
         SELECT a.name, a.asset_name
         FROM `tabAsset` a
@@ -498,6 +509,7 @@ def get_available_assets(doctype, txt, searchfield, start, page_len, filters):
           {location_clause}
           {type_clause}
           {occupied_clause}
+          {category_clause}
         LIMIT %(start)s, %(page_len)s
     """, {"txt": f"%{txt}%", "start": cint(start), "page_len": cint(page_len)})
 

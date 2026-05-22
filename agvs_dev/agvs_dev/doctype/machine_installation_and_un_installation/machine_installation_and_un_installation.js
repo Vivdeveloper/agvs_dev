@@ -1343,21 +1343,45 @@ function createMaterialRequestFromMI(frm) {
 
 frappe.ui.form.on("Machine Installation and Un-Installation", {
     refresh(frm) {
-        set_asset_query(frm);
+        fetch_so_categories_and_set_query(frm);
     },
 
     installation_type(frm) {
         set_asset_query(frm);
+    },
+
+    sales_order(frm) {
+        fetch_so_categories_and_set_query(frm);
     }
 });
 
-function set_asset_query(frm) {
-    const machine_type = frm.doc.installation_type === "Demo Installation" ? "Demo" : "Regular";
+function fetch_so_categories_and_set_query(frm) {
+    if (!frm.doc.sales_order) {
+        frm._so_asset_categories = [];
+        set_asset_query(frm);
+        return;
+    }
+    frappe.db.get_doc('Sales Order', frm.doc.sales_order).then(so => {
+        frm._so_asset_categories = (so.items || [])
+            .map(r => r.custom_asset_category)
+            .filter(Boolean);
+        set_asset_query(frm);
+    });
+}
 
-    frm.set_query("asset", "machine_items", {
-        query: "agvs_dev.agvs_dev.doctype.machine_installation_and_un_installation.machine_installation_and_un_installation.get_available_assets",
-        filters: { custom_machine_type: machine_type,location :"Office"
-         }
+function set_asset_query(frm) {
+    const is_demo = frm.doc.installation_type === "Demo Installation";
+    const machine_type = is_demo ? "Demo" : "Regular";
+    const filters = { custom_machine_type: machine_type, location: "Office" };
+
+    // Category filter only applies for Sales/Service Agreement (Installation/Uninstallation),
+    // not for Demo Installation which is linked via Opportunity, not Sales Order.
+    if (!is_demo && frm._so_asset_categories && frm._so_asset_categories.length) {
+        filters.asset_category = ["in", frm._so_asset_categories];
+    }
+
+    frm.set_query("asset", "machine_items", function() {
+        return { filters: filters };
     });
 }
 
