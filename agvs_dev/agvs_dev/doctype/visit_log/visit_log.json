@@ -99,7 +99,6 @@
    "options": "\nRegular Visit\nDemo Installation\nDemo Uninstallation\nInstallation\nUninstallation"
   },
   {
-   "default": "Demo Location",
    "fieldname": "target_location",
    "fieldtype": "Link",
    "hidden": 1,

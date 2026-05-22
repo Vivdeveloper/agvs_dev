@@ -45,25 +45,64 @@ function fetch_items_from_mi(frm) {
         });
 }
 
-// === Demo Installation: toggle grid columns ===
-function toggle_demo_columns(frm) {
-    const is_demo = frm.doc.visit_type === "Demo Installation";
+// === Toggle grid columns and labels based on visit_type ===
+function toggle_maintenance_columns(frm) {
     const grid = frm.fields_dict["custom_asset_maintenance_item"]
         && frm.fields_dict["custom_asset_maintenance_item"].grid;
     if (!grid) return;
 
-    // Demo Installation: capacity_qty + demo_qty only
-    // Other types:       capacity_qty + existing_qty + refill_qty + balance_qty
-    grid.set_column_disp("capacity_qty", true);
-    grid.set_column_disp("demo_qty",     is_demo);
-    grid.set_column_disp("existing_qty", !is_demo);
-    grid.set_column_disp("refill_qty",   !is_demo);
-    grid.set_column_disp("balance_qty",  !is_demo);
+    const vt = frm.doc.visit_type;
+
+    // Helper to rename a column header inside the grid's local docfields
+    function set_col_label(fieldname, label) {
+        const df = (grid.docfields || []).find(f => f.fieldname === fieldname);
+        if (df) df.label = label;
+    }
+
+    if (vt === "Demo Installation") {
+        // Demo Qty editable; Existing Qty and Refill Qty hidden
+        grid.set_column_disp("demo_qty",     true);
+        grid.set_column_disp("existing_qty", false);
+        grid.set_column_disp("refill_qty",   false);
+        grid.set_column_disp("balance_qty",  false);
+        set_col_label("demo_qty",     "Demo Qty");
+        set_col_label("existing_qty", "Existing Qty");
+        set_col_label("refill_qty",   "Refill Qty");
+
+    } else if (vt === "Demo Uninstallation") {
+        // Return Qty (existing_qty) editable; Demo Qty and Refill Qty hidden
+        grid.set_column_disp("demo_qty",     false);
+        grid.set_column_disp("existing_qty", true);
+        grid.set_column_disp("refill_qty",   false);
+        grid.set_column_disp("balance_qty",  false);
+        set_col_label("existing_qty", "Return Qty");
+        set_col_label("refill_qty",   "Refill Qty");
+
+    } else if (vt === "Installation") {
+        // Installed Qty (refill_qty) editable; Demo Qty and Existing Qty hidden
+        grid.set_column_disp("demo_qty",     false);
+        grid.set_column_disp("existing_qty", false);
+        grid.set_column_disp("refill_qty",   true);
+        grid.set_column_disp("balance_qty",  false);
+        set_col_label("existing_qty", "Existing Qty");
+        set_col_label("refill_qty",   "Installed Qty");
+
+    } else {
+        // Regular Visit / Uninstallation / other — show all with original labels
+        grid.set_column_disp("demo_qty",     true);
+        grid.set_column_disp("existing_qty", true);
+        grid.set_column_disp("refill_qty",   true);
+        grid.set_column_disp("balance_qty",  true);
+        set_col_label("existing_qty", "Existing Qty");
+        set_col_label("refill_qty",   "Refill Qty");
+    }
+
+    grid.refresh();
 }
 
 frappe.ui.form.on('Visit Log', {
-    refresh:    frm => toggle_demo_columns(frm),
-    visit_type: frm => toggle_demo_columns(frm)
+    refresh:    frm => toggle_maintenance_columns(frm),
+    visit_type: frm => toggle_maintenance_columns(frm)
 });
 
 // === Completion Date and Time in Visit log  ===
@@ -80,6 +119,12 @@ frappe.ui.form.on('Visit Log', {
 
 // === fetch raw material from Asset  ===
 frappe.ui.form.on('Visit Log', {
+    refresh: function(frm) {
+        if (frm.doc.docstatus === 1) {
+            frm.set_df_property('custom_get_maintenance_item', 'hidden', 1);
+        }
+    },
+
     asset: function(frm) {
         frm.events.get_maintenance_items(frm);
     },
@@ -89,36 +134,30 @@ frappe.ui.form.on('Visit Log', {
     },
 
     get_maintenance_items: function(frm) {
-        // Clear table
+        if (frm._fetching_maintenance_items) return;
+        frm._fetching_maintenance_items = true;
+
         frm.clear_table('custom_asset_maintenance_item');
 
         if (!frm.doc.asset) {
             frappe.msgprint("Please select Asset.");
             frm.refresh_field('custom_asset_maintenance_item');
+            frm._fetching_maintenance_items = false;
             return;
         }
 
-        // asset = Asset
         frappe.db.get_doc('Asset', frm.doc.asset)
             .then(asset_doc => {
-                let previous_balance = 0;
-
-                (asset_doc.custom_asset_requirement_item || []).forEach((row, idx) => {
+                (asset_doc.custom_asset_requirement_item || []).forEach(row => {
                     let child = frm.add_child('custom_asset_maintenance_item');
                     child.item_code = row.item_code;
                     child.capacity_qty = row.capacity_qty;
                     child.uom = row.uom;
-
-                    // take balance from first asset item row (or last, if you prefer)
-                    if (idx === 0) {
-                        previous_balance = row.balance_qty || 0;
-                    }
                 });
-
-               
-
                 frm.refresh_field('custom_asset_maintenance_item');
-                
+            })
+            .finally(() => {
+                frm._fetching_maintenance_items = false;
             });
     }
 });

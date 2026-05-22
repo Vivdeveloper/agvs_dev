@@ -68,7 +68,9 @@ class VisitLog(Document):
         self._fetch_today_date_from_custom_completion_date()
         self._fetch_value_to_asset_in_visit_log()
         self._stock_entry_auto_consumed_entry()
+        self._update_maintenance_schedule_on_completion()
         self._auto_create_installation_entries()
+        self._auto_create_delivery_note_for_installation()
         self._auto_create_demo_installation_entries()
         self._auto_create_uninstallation_entries()
         self._auto_create_demo_uninstallation_entries()
@@ -161,8 +163,44 @@ class VisitLog(Document):
 
     # Stock Entry auto consumed entry
     def _stock_entry_auto_consumed_entry(self):
-        # Demo types handle their own entries — skip Material Issue creation
+        # For Demo/Installation types: only process additional consumed items (main items handled elsewhere)
         if self.visit_type in ("Demo Installation", "Demo Uninstallation", "Installation", "Uninstallation"):
+            additional_rows = [
+                r for r in (self.visit_log_additional_consumed_items or [])
+                if r.item_code and (r.consumed_qty or 0) > 0
+            ]
+            if not additional_rows:
+                return
+            if not self.warehouse:
+                frappe.throw(
+                    "Please select <b>Source Warehouse</b> to process Additional Consumed Items."
+                )
+            # Skip if already created
+            if frappe.db.exists("Stock Entry", {
+                "custom_visit_log": self.name,
+                "stock_entry_type": "Material Issue",
+                "docstatus": 1
+            }):
+                return
+            items = []
+            for r in additional_rows:
+                items.append({
+                    "item_code": r.item_code,
+                    "qty": r.consumed_qty,
+                    "uom": r.uom or "Nos",
+                    "s_warehouse": self.warehouse,
+                    "custom_visit_log": self.name
+                })
+            se = frappe.get_doc({
+                "doctype": "Stock Entry",
+                "stock_entry_type": "Material Issue",
+                "company": self.company,
+                "from_warehouse": self.warehouse,
+                "custom_visit_log": self.name,
+                "items": items
+            })
+            se.insert(ignore_permissions=True)
+            se.submit()
             return
 
         # CREATE MATERIAL ISSUE STOCK ENTRY FROM VISIT LOG
@@ -237,6 +275,12 @@ class VisitLog(Document):
         })
         if not am_exists:
             employee_location = self._get_employee_location() or ""
+            # Use client_location from MI — target_location defaults to "Demo Location" which is wrong
+            client_location = frappe.db.get_value(
+                "Machine Installation and Un-Installation",
+                self.machine_installation,
+                "client_location"
+            ) or ""
             am = frappe.get_doc({
                 "doctype": "Asset Movement",
                 "purpose": "Receipt",
@@ -245,7 +289,7 @@ class VisitLog(Document):
                 "custom_machine_installation": self.machine_installation,
                 "assets": [{
                     "asset": self.asset,
-                    "source_location": self.target_location or "",
+                    "source_location": client_location,
                     "target_location": employee_location
                 }]
             })
@@ -324,15 +368,72 @@ class VisitLog(Document):
                     "a submitted <b>Installation</b> Visit Log must exist for this Sales Order first."
                 )
 
-    def _get_employee_warehouse(self):
+    def _get_employee_warehouse(self, company=None):
         if not self.assign_to:
             return None
-        return frappe.db.get_value("Warehouse", {"custom_user": self.assign_to}, "name")
+        filters = {"custom_user": self.assign_to}
+        if company:
+            filters["company"] = company
+        return frappe.db.get_value("Warehouse", filters, "name")
 
     def _get_employee_location(self):
         if not self.assign_to:
             return None
         return frappe.db.get_value("Location", {"custom_user": self.assign_to}, "name")
+
+    def _update_maintenance_schedule_on_completion(self):
+        """Mark the nearest pending Maintenance Schedule Detail as Completed
+        when a Regular Visit (non-installation) Visit Log is submitted."""
+        if self.visit_type in ("Demo Installation", "Demo Uninstallation", "Installation", "Uninstallation"):
+            return
+
+        if not self.machine_installation:
+            return
+
+        # Find submitted Maintenance Schedule for this Machine Installation
+        ms_name = frappe.db.get_value(
+            "Maintenance Schedule",
+            {"custom_machine_installation": self.machine_installation, "docstatus": 1},
+            "name"
+        )
+        if not ms_name:
+            return
+
+        completion_date = (
+            frappe.utils.getdate(self.completion_date_and_time)
+            if self.completion_date_and_time
+            else frappe.utils.today()
+        )
+
+        # Find the nearest Pending detail row by scheduled_date
+        detail = frappe.db.sql("""
+            SELECT name
+            FROM `tabMaintenance Schedule Detail`
+            WHERE parent = %s
+              AND completion_status = 'Pending'
+            ORDER BY ABS(DATEDIFF(scheduled_date, %s)) ASC
+            LIMIT 1
+        """, (ms_name, completion_date), as_dict=True)
+
+        if not detail:
+            return
+
+        frappe.db.set_value(
+            "Maintenance Schedule Detail",
+            detail[0].name,
+            {
+                "completion_status": "Completed",
+                "actual_date": completion_date
+            }
+        )
+
+        # If all detail rows completed, mark the schedule itself as Completed
+        pending_count = frappe.db.count(
+            "Maintenance Schedule Detail",
+            {"parent": ms_name, "completion_status": "Pending"}
+        )
+        if not pending_count:
+            frappe.db.set_value("Maintenance Schedule", ms_name, "status", "Completed")
 
     def _auto_create_installation_entries(self):
         if self.visit_type != "Installation":
@@ -341,7 +442,7 @@ class VisitLog(Document):
         if not self.asset:
             return
 
-        # 1. Asset Movement (Transfer): employee location → target location
+        # 1. Asset Movement (Transfer): employee location → client location
         am_exists = frappe.db.exists("Asset Movement", {
             "custom_visit_log": self.name,
             "purpose": "Transfer",
@@ -349,6 +450,13 @@ class VisitLog(Document):
         })
         if not am_exists:
             employee_location = self._get_employee_location() or ""
+            # Use client_location from Machine Installation, not target_location
+            # (target_location defaults to "Demo Location" which is wrong for Installation)
+            client_location = frappe.db.get_value(
+                "Machine Installation and Un-Installation",
+                self.machine_installation,
+                "client_location"
+            ) or ""
             am = frappe.get_doc({
                 "doctype": "Asset Movement",
                 "purpose": "Transfer",
@@ -358,7 +466,7 @@ class VisitLog(Document):
                 "assets": [{
                     "asset": self.asset,
                     "source_location": employee_location,
-                    "target_location": self.target_location or ""
+                    "target_location": client_location
                 }]
             })
             am.insert(ignore_permissions=True)
@@ -429,6 +537,89 @@ class VisitLog(Document):
                 })
                 se.insert(ignore_permissions=True)
                 se.submit()
+
+    def _auto_create_delivery_note_for_installation(self):
+        """Auto-create and submit a Delivery Note when an Installation Visit Log is submitted.
+        Source warehouse = employee's warehouse (looked up via assign_to → Warehouse.custom_user).
+        Items are pulled from the linked Sales Order; falls back to maintenance items if no SO."""
+        if self.visit_type != "Installation":
+            return
+
+        if not self.machine_installation:
+            return
+
+        # Skip if a DN already exists for this Visit Log
+        if frappe.db.exists("Delivery Note", {"custom_visit_log": self.name, "docstatus": ["!=", 2]}):
+            return
+
+        mi = frappe.get_doc("Machine Installation and Un-Installation", self.machine_installation)
+
+        company = self.company or ""
+        customer = frappe.db.get_value("Sales Order", mi.sales_order, "customer") if mi.sales_order else None
+
+        if not customer:
+            # Try fetching customer from the asset
+            customer = frappe.db.get_value("Asset", self.asset, "custodian") if self.asset else None
+
+        if not customer:
+            frappe.log_error(
+                f"Visit Log {self.name}: could not determine customer for Delivery Note — skipping.",
+                "DN Auto-Create"
+            )
+            return
+
+        employee_warehouse = self._get_employee_warehouse()
+
+        items = []
+
+        # Build items from Sales Order
+        if mi.sales_order:
+            so_items = frappe.db.get_all(
+                "Sales Order Item",
+                filters={"parent": mi.sales_order},
+                fields=["item_code", "item_name", "description", "qty", "uom", "rate", "name"]
+            )
+            for si in so_items:
+                items.append({
+                    "item_code": si.item_code,
+                    "item_name": si.item_name,
+                    "description": si.description or si.item_name,
+                    "qty": si.qty,
+                    "uom": si.uom,
+                    "rate": si.rate,
+                    "warehouse": employee_warehouse,
+                    "against_sales_order": mi.sales_order,
+                    "so_detail": si.name,
+                    "custom_visit_log": self.name
+                })
+
+        # Fallback: use maintenance items (installed_qty / refill_qty)
+        if not items:
+            for row in (self.custom_asset_maintenance_item or []):
+                qty = row.get("refill_qty") or 0
+                if row.item_code and qty > 0:
+                    items.append({
+                        "item_code": row.item_code,
+                        "qty": qty,
+                        "uom": row.uom or "Nos",
+                        "warehouse": employee_warehouse,
+                        "custom_visit_log": self.name
+                    })
+
+        if not items:
+            return
+
+        dn = frappe.get_doc({
+            "doctype": "Delivery Note",
+            "customer": customer,
+            "company": company,
+            "posting_date": frappe.utils.today(),
+            "set_warehouse": employee_warehouse,
+            "custom_visit_log": self.name,
+            "items": items
+        })
+        dn.insert(ignore_permissions=True)
+        dn.submit()
 
     # Auto-create Asset Movement + Stock Entry when Demo Installation Visit Log is submitted
     def _auto_create_demo_installation_entries(self):

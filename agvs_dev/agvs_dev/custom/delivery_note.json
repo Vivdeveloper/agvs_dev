@@ -1482,6 +1482,17 @@
    "read_only": 1,
    "reqd": 0,
    "name": "Delivery Note-custom_maintenance_visit"
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "custom_visit_log",
+   "fieldtype": "Link",
+   "label": "Visit Log",
+   "options": "Visit Log",
+   "insert_after": "custom_maintenance_visit",
+   "read_only": 1,
+   "reqd": 0,
+   "name": "Delivery Note-custom_visit_log"
   }
  ],
  "custom_perms": [],
