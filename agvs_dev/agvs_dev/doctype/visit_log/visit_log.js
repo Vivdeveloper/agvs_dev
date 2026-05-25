@@ -53,48 +53,64 @@ function toggle_maintenance_columns(frm) {
 
     const vt = frm.doc.visit_type;
 
-    // Helper to rename a column header inside the grid's local docfields
     function set_col_label(fieldname, label) {
         const df = (grid.docfields || []).find(f => f.fieldname === fieldname);
         if (df) df.label = label;
     }
 
-    if (vt === "Demo Installation") {
-        // Demo Qty editable; Existing Qty and Refill Qty hidden
-        grid.set_column_disp("demo_qty",     true);
-        grid.set_column_disp("existing_qty", false);
-        grid.set_column_disp("refill_qty",   false);
-        grid.set_column_disp("balance_qty",  false);
-        set_col_label("demo_qty",     "Demo Qty");
-        set_col_label("existing_qty", "Existing Qty");
-        set_col_label("refill_qty",   "Refill Qty");
+    // Reset all labels to default first
+    set_col_label("existing_qty", "Existing Qty");
+    set_col_label("refill_qty",   "Refill Qty");
+
+    if (vt === "Installation") {
+        // Item Code, UOM, Capacity Qty, Installed Qty
+        grid.set_column_disp("capacity_qty",  true);
+        grid.set_column_disp("demo_qty",      false);
+        grid.set_column_disp("existing_qty",  false);
+        grid.set_column_disp("refill_qty",    true);
+        grid.set_column_disp("balance_qty",   false);
+        set_col_label("refill_qty", "Installed Qty");
+
+    } else if (vt === "Demo Installation") {
+        // Item Code, UOM, Demo Qty
+        grid.set_column_disp("capacity_qty",  false);
+        grid.set_column_disp("demo_qty",      true);
+        grid.set_column_disp("existing_qty",  false);
+        grid.set_column_disp("refill_qty",    false);
+        grid.set_column_disp("balance_qty",   false);
 
     } else if (vt === "Demo Uninstallation") {
-        // Return Qty (existing_qty) editable; Demo Qty and Refill Qty hidden
-        grid.set_column_disp("demo_qty",     false);
-        grid.set_column_disp("existing_qty", true);
-        grid.set_column_disp("refill_qty",   false);
-        grid.set_column_disp("balance_qty",  false);
+        // Item Code, UOM, Return Qty
+        grid.set_column_disp("capacity_qty",  false);
+        grid.set_column_disp("demo_qty",      false);
+        grid.set_column_disp("existing_qty",  true);
+        grid.set_column_disp("refill_qty",    false);
+        grid.set_column_disp("balance_qty",   false);
         set_col_label("existing_qty", "Return Qty");
-        set_col_label("refill_qty",   "Refill Qty");
 
-    } else if (vt === "Installation") {
-        // Installed Qty (refill_qty) editable; Demo Qty and Existing Qty hidden
-        grid.set_column_disp("demo_qty",     false);
-        grid.set_column_disp("existing_qty", false);
-        grid.set_column_disp("refill_qty",   true);
-        grid.set_column_disp("balance_qty",  false);
-        set_col_label("existing_qty", "Existing Qty");
-        set_col_label("refill_qty",   "Installed Qty");
+    } else if (vt === "Uninstallation") {
+        // Item Code, UOM, Existing Qty, Balance Qty
+        grid.set_column_disp("capacity_qty",  false);
+        grid.set_column_disp("demo_qty",      false);
+        grid.set_column_disp("existing_qty",  true);
+        grid.set_column_disp("refill_qty",    false);
+        grid.set_column_disp("balance_qty",   true);
+
+    } else if (vt === "Regular Visit") {
+        // Item Code, UOM, Existing Qty, Refill Qty, Balance Qty
+        grid.set_column_disp("capacity_qty",  false);
+        grid.set_column_disp("demo_qty",      false);
+        grid.set_column_disp("existing_qty",  true);
+        grid.set_column_disp("refill_qty",    true);
+        grid.set_column_disp("balance_qty",   true);
 
     } else {
-        // Regular Visit / Uninstallation / other — show all with original labels
-        grid.set_column_disp("demo_qty",     true);
-        grid.set_column_disp("existing_qty", true);
-        grid.set_column_disp("refill_qty",   true);
-        grid.set_column_disp("balance_qty",  true);
-        set_col_label("existing_qty", "Existing Qty");
-        set_col_label("refill_qty",   "Refill Qty");
+        // No visit type selected — show all with original labels
+        grid.set_column_disp("capacity_qty",  true);
+        grid.set_column_disp("demo_qty",      true);
+        grid.set_column_disp("existing_qty",  true);
+        grid.set_column_disp("refill_qty",    true);
+        grid.set_column_disp("balance_qty",   true);
     }
 
     grid.refresh();

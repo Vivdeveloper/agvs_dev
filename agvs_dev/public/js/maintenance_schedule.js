@@ -7,6 +7,20 @@ frappe.ui.form.on('Maintenance Schedule', {
                 create_maintenance_visit(frm);
             }, 'Create');
         }, 100);
+
+        // Auto-fill sales_person for all existing rows
+        (frm.doc.items || []).forEach(row => {
+            if (!row.sales_person) {
+                frappe.model.set_value(row.doctype, row.name, 'sales_person', frappe.session.user);
+            }
+        });
+    }
+});
+
+// Auto-fill sales_person when a new row is added
+frappe.ui.form.on('Maintenance Schedule Item', {
+    items_add(frm, cdt, cdn) {
+        frappe.model.set_value(cdt, cdn, 'sales_person', frappe.session.user);
     }
 });
 
