@@ -18,6 +18,9 @@ fixtures = [
 	{"dt": "Translation", "filters": [["name", "!=", ""]]},
 ]
 
+
+
+
 # Client Scripts for standard ERPNext doctypes (custom doctypes have their own doctype JS files)
 doctype_js = {
 	"Address": "public/js/address.js",

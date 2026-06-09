@@ -1433,11 +1433,49 @@ frappe.ui.form.on("Machine Installation and Un-Installation", {
 
 // === Material request item in MI  ===
 // ---------------------------
-// Child Table: Machine Items
+// Child Table: Machine Items — prevent duplicate Asset
 // ---------------------------
-frappe.ui.form.on("Machine Items", {
+frappe.ui.form.on("Machine Item", {
     asset(frm, cdt, cdn) {
-        // keep event – nothing needed here now
+        const row = locals[cdt][cdn];
+        if (!row.asset) return;
+
+        const duplicate = (frm.doc.machine_items || []).some(
+            d => d.name !== cdn && d.asset === row.asset
+        );
+
+        if (duplicate) {
+            frappe.model.set_value(cdt, cdn, "asset", "");
+            frappe.model.set_value(cdt, cdn, "asset_name", "");
+            frappe.msgprint({
+                title: __("Duplicate Asset"),
+                indicator: "red",
+                message: __("Asset {0} is already added in another row.", [row.asset])
+            });
+        }
+    }
+});
+
+// ---------------------------
+// Child Table: Requirement Item(s) (table_uuer) — prevent duplicate Item Code
+// ---------------------------
+frappe.ui.form.on("Asset Material Request Item", {
+    item_code(frm, cdt, cdn) {
+        const row = locals[cdt][cdn];
+        if (!row.item_code) return;
+
+        const duplicate = (frm.doc.table_uuer || []).some(
+            d => d.name !== cdn && d.item_code === row.item_code
+        );
+
+        if (duplicate) {
+            frappe.model.set_value(cdt, cdn, "item_code", "");
+            frappe.msgprint({
+                title: __("Duplicate Item"),
+                indicator: "red",
+                message: __("Item {0} is already added in another row.", [row.item_code])
+            });
+        }
     }
 });
 

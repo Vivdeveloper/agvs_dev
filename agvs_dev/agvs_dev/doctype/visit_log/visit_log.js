@@ -229,3 +229,46 @@ frappe.listview_settings["Visit Log"] = {
 	},
 };
 
+
+// === Asset Maintenance Items — prevent duplicate Item Code ===
+frappe.ui.form.on("Asset Maintenance Item", {
+	item_code(frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
+		if (!row.item_code) return;
+
+		const duplicate = (frm.doc.custom_asset_maintenance_item || []).some(
+			d => d.name !== cdn && d.item_code === row.item_code
+		);
+
+		if (duplicate) {
+			frappe.model.set_value(cdt, cdn, "item_code", "");
+			frappe.msgprint({
+				title: __("Duplicate Item"),
+				indicator: "red",
+				message: __("Item {0} is already added in another row.", [row.item_code])
+			});
+		}
+	}
+});
+
+// === Visit Log Additional Consumed Items — prevent duplicate Item Code ===
+frappe.ui.form.on("Visit Log Additional Consumed Item", {
+	item_code(frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
+		if (!row.item_code) return;
+
+		const duplicate = (frm.doc.visit_log_additional_consumed_items || []).some(
+			d => d.name !== cdn && d.item_code === row.item_code
+		);
+
+		if (duplicate) {
+			frappe.model.set_value(cdt, cdn, "item_code", "");
+			frappe.msgprint({
+				title: __("Duplicate Item"),
+				indicator: "red",
+				message: __("Item {0} is already added in another row.", [row.item_code])
+			});
+		}
+	}
+});
+
