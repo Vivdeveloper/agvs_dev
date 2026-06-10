@@ -1,0 +1,18 @@
+[
+ {
+  "default_value": null,
+  "doc_type": "Sales Order",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "order_type",
+  "is_system_generated": 1,
+  "modified": "2026-06-10 12:30:44.524059",
+  "module": "agvs_dev",
+  "name": "Sales Order-order_type-options",
+  "property": "options",
+  "property_type": "Text",
+  "row_name": null,
+  "value": "Sales\nMaintenance(AMC)"
+ }
+]

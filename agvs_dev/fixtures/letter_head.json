@@ -1,7 +1,7 @@
 [
  {
   "align": "Left",
-  "content": "<table style=\"border-collapse:collapse; font-family:Arial, Helvetica, sans-serif; color:#000; width:100%; max-width:600px;\">\n  <tbody><tr>\n    <!-- LOGO -->\n    <td style=\"vertical-align:middle; padding-right:14px; width:110px;\">\n      <img src=\"/files/tmp_ff244c06-40c3-4a2b-ba82-95b01af67ce2.png\" style=\"width:90px; height:auto; display:block;\">\n    </td>\n\n    <!-- TEXT -->\n    <td style=\"border-left:2px solid #000; padding-left:14px; vertical-align:middle;\">\n      <div style=\"line-height:1.35;\">\n\n        <div style=\"font-size:15px; font-weight:bold;\">\n          AGVS Enterprises Private Limited\n        </div>\n\n        <div style=\"font-size:12px;\">\n          +91 98921 01959 | +91 91369 83961\n        </div>\n\n        <div style=\"font-size:12px;\">\n          2F - Office No. 20, MCGM Market and Dispensary Building\n        </div>\n\n        <div style=\"font-size:12px;\">\n          Nahar Amrit Shakti, Chandivali\n        </div>\n\n        <div style=\"font-size:12px; font-weight:bold;\">\n          Mumbai – 400072, Maharashtra, India\n        </div>\n\n        <div style=\"font-size:12px;\">\n          info@agvs.in\n        </div>\n\n      </div>\n    </td>\n  </tr>\n</tbody></table>",
+  "content": "<div style=\"text-align: left;\">\n<img src=\"/files/tmp_ff244c06-40c3-4a2b-ba82-95b01af67ce2.png\" alt=\"Scented Slogan\" height=\"100.0\" style=\"height: 100.0px;\">\n</div>",
   "disabled": 0,
   "docstatus": 0,
   "doctype": "Letter Head",
@@ -20,6 +20,6 @@
   "letter_head_name": "Scented Slogan",
   "modified": "2026-02-17 17:55:49.149943",
   "name": "Scented Slogan",
-  "source": "HTML"
+  "source": "Image"
  }
 ]

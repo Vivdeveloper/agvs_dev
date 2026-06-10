@@ -16,6 +16,8 @@ fixtures = [
 	{"dt": "Letter Head", "filters": [["name", "!=", ""]]},
 	# Translations
 	{"dt": "Translation", "filters": [["name", "!=", ""]]},
+	# Sales Order "Order Type" options (Sales / Maintenance(AMC))
+	{"dt": "Property Setter", "filters": [["name", "=", "Sales Order-order_type-options"]]},
 ]
 
 
