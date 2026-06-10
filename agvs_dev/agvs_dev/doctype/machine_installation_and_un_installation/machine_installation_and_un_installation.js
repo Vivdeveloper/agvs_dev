@@ -1529,6 +1529,11 @@ function fill_requirement_items_from_assets(frm) {
                 // -----------------------------
                 child.required_qty = row.capacity_qty || 0;
 
+                // Track which asset / category this requirement item belongs to,
+                // so the per-asset Demo Quantity limit can be validated.
+                child.asset          = asset_name;
+                child.asset_category = asset_doc.asset_category;
+
                 // If your table_uuer has a warehouse field:
                 // child.warehouse = frm.doc.material_warehouse;
             });
@@ -1566,31 +1571,36 @@ frappe.ui.form.on("Machine Installation and Un-Installation", {
 });
 
 
-// === Qty Requirement Validation  ===
+// === Demo Quantity limit per Asset Category (instant feedback) ===
+// For Demo Installation: per asset, the total "Quantity to Issue" of its requirement
+// items must not exceed the asset's Asset Category "Demo Quantity".
+// (Hard enforcement is done server-side in validate(); this is only for instant UX.)
 frappe.ui.form.on('Asset Material Request Item', {
     issued_qty: function(frm, cdt, cdn) {
+        if (frm.doc.installation_type !== "Demo Installation") return;
 
-        let row = locals[cdt][cdn];
+        const row = locals[cdt][cdn];
+        const category = row.asset_category;
+        if (!category) return;
 
-        if (frm.doc.installation_type === "Demo Installation" && row.issued_qty > 300) {
-            frappe.msgprint("Max quantity is 300 grams");
-            frappe.model.set_value(cdt, cdn, "issued_qty", 300);
-        }
-    }
-});
+        // Total issued_qty for all rows of the SAME asset
+        const asset_total = (frm.doc.table_uuer || [])
+            .filter(d => d.asset === row.asset)
+            .reduce((sum, d) => sum + (Number(d.issued_qty) || 0), 0);
 
-frappe.ui.form.on('Machine Installation and Uninstallation', {
-    validate: function(frm) {
-
-        if (frm.doc.installation_type === "Demo Installation") {
-
-            frm.doc.table_uuer.forEach(function(row) {
-                if (row.issued_qty > 300) {
-                    frappe.throw("Max quantity is 300 grams");
-                }
-            });
-
-        }
+        frappe.db.get_value("Asset Category", category, "custom_demo_quantity").then(r => {
+            const limit = (r && r.message) ? Number(r.message.custom_demo_quantity) || 0 : 0;
+            if (limit && asset_total > limit) {
+                frappe.msgprint({
+                    title: __("Demo Quantity Exceeded"),
+                    indicator: "red",
+                    message: __(
+                        "Asset {0} (Category {1}): total Quantity to Issue ({2}) exceeds the Demo Quantity limit ({3}).",
+                        [row.asset, category, asset_total, limit]
+                    )
+                });
+            }
+        });
     }
 });
 

@@ -1,5 +1,8 @@
 import re
 import frappe
+from frappe import _
+from frappe.utils import flt
+from collections import defaultdict
 from frappe.model.document import Document
 
 
@@ -12,6 +15,45 @@ def _strip_html(value):
 
 
 class MachineInstallationandUnInstallation(Document):
+
+    def validate(self):
+        self._validate_demo_quantity_limit()
+
+    # Demo Quantity limit per Asset Category
+    def _validate_demo_quantity_limit(self):
+        """For Demo Installation only: per asset, the total "Quantity to Issue"
+        of its Requirement Items must not exceed the asset's Asset Category
+        "Demo Quantity". Each asset is checked against its own category limit."""
+        if self.installation_type != "Demo Installation":
+            return
+
+        # Sum issued_qty per source asset (rows are tagged with their asset
+        # when filled via "Get Materials for Transfer").
+        asset_totals = defaultdict(float)
+        for row in (self.table_uuer or []):
+            if not row.get("asset"):
+                continue
+            asset_totals[row.asset] += flt(row.issued_qty)
+
+        # Cache category + limit lookups
+        category_limit_cache = {}
+        for asset, total in asset_totals.items():
+            category = frappe.db.get_value("Asset", asset, "asset_category")
+            if not category:
+                continue
+
+            if category not in category_limit_cache:
+                category_limit_cache[category] = flt(
+                    frappe.db.get_value("Asset Category", category, "custom_demo_quantity")
+                )
+            limit = category_limit_cache[category]
+
+            # limit 0 / not set => no restriction
+            if limit and total > limit:
+                frappe.throw(
+                    _("Asset {0} (Category {1}): total Quantity to Issue ({2}) exceeds the Demo Quantity limit ({3}) for this category.")
+                    .format(frappe.bold(asset), frappe.bold(category), total, limit)
+                )
 
     def before_save(self):
         # Frappe sometimes sets amended_from to the new doc's temp name on cancel→amend;
