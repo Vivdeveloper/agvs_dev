@@ -1,5 +1,21 @@
 import frappe
+from frappe import _
 from frappe.model.document import Document
+
+
+@frappe.whitelist()
+def set_asset_type_of_location(asset, type_of_location):
+    """Push the Type of Location captured on the Visit Log onto the linked Asset.
+
+    Uses a direct DB write so it also works when the Asset is already submitted
+    (custom_type_of_location is not allow-on-submit)."""
+    if not asset or not type_of_location:
+        frappe.throw(_("Asset and Type of Location are both required."))
+
+    if not frappe.has_permission("Asset", "write", doc=asset):
+        frappe.throw(_("Not permitted to update the Asset."), frappe.PermissionError)
+
+    frappe.db.set_value("Asset", asset, "custom_type_of_location", type_of_location)
 
 
 class VisitLog(Document):

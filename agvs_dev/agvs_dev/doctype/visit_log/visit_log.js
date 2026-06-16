@@ -72,16 +72,16 @@ function toggle_maintenance_columns(frm) {
         set_col_label("refill_qty", "Installed Qty");
 
     } else if (vt === "Demo Installation") {
-        // Item Code, UOM, Demo Qty
-        grid.set_column_disp("capacity_qty",  false);
+        // Item Code, UOM, Capacity Qty, Demo Qty
+        grid.set_column_disp("capacity_qty",  true);
         grid.set_column_disp("demo_qty",      true);
         grid.set_column_disp("existing_qty",  false);
         grid.set_column_disp("refill_qty",    false);
         grid.set_column_disp("balance_qty",   false);
 
     } else if (vt === "Demo Uninstallation") {
-        // Item Code, UOM, Return Qty
-        grid.set_column_disp("capacity_qty",  false);
+        // Item Code, UOM, Capacity Qty, Return Qty
+        grid.set_column_disp("capacity_qty",  true);
         grid.set_column_disp("demo_qty",      false);
         grid.set_column_disp("existing_qty",  true);
         grid.set_column_disp("refill_qty",    false);
@@ -89,16 +89,16 @@ function toggle_maintenance_columns(frm) {
         set_col_label("existing_qty", "Return Qty");
 
     } else if (vt === "Uninstallation") {
-        // Item Code, UOM, Existing Qty, Balance Qty
-        grid.set_column_disp("capacity_qty",  false);
+        // Item Code, UOM, Capacity Qty, Existing Qty, Balance Qty
+        grid.set_column_disp("capacity_qty",  true);
         grid.set_column_disp("demo_qty",      false);
         grid.set_column_disp("existing_qty",  true);
         grid.set_column_disp("refill_qty",    false);
         grid.set_column_disp("balance_qty",   true);
 
     } else if (vt === "Regular Visit") {
-        // Item Code, UOM, Existing Qty, Refill Qty, Balance Qty
-        grid.set_column_disp("capacity_qty",  false);
+        // Item Code, UOM, Capacity Qty, Existing Qty, Refill Qty, Balance Qty
+        grid.set_column_disp("capacity_qty",  true);
         grid.set_column_disp("demo_qty",      false);
         grid.set_column_disp("existing_qty",  true);
         grid.set_column_disp("refill_qty",    true);
@@ -119,6 +119,68 @@ function toggle_maintenance_columns(frm) {
 frappe.ui.form.on('Visit Log', {
     refresh:    frm => toggle_maintenance_columns(frm),
     visit_type: frm => toggle_maintenance_columns(frm)
+});
+
+// === Capture Type of Location on the Asset before submitting (Installation / Demo Installation) ===
+frappe.ui.form.on('Visit Log', {
+    before_submit: function(frm) {
+        if (!["Installation", "Demo Installation"].includes(frm.doc.visit_type)) return;
+        if (frm.__type_of_location_saved) return;
+
+        if (!frm.doc.asset) {
+            frappe.validated = false;
+            frappe.msgprint(__('Please select an Asset before submitting.'));
+            return;
+        }
+
+        // Pause the submit until the user provides the Type of Location
+        return frappe.db.get_value('Asset', frm.doc.asset, 'custom_type_of_location').then(function(r) {
+            const current = r.message && r.message.custom_type_of_location;
+
+            return new Promise(function(resolve) {
+                const d = new frappe.ui.Dialog({
+                    title: __('Set Type of Location'),
+                    fields: [
+                        {
+                            fieldname: 'type_of_location',
+                            label: __('Type of Location'),
+                            fieldtype: 'Link',
+                            options: 'Type of Location',   // same options as the Asset field
+                            reqd: 1,
+                            default: current || ''
+                        }
+                    ],
+                    primary_action_label: __('Save & Submit'),
+                    primary_action: function(values) {
+                        d.disable_primary_action();
+                        frappe.call({
+                            method: 'agvs_dev.agvs_dev.doctype.visit_log.visit_log.set_asset_type_of_location',
+                            args: {
+                                asset: frm.doc.asset,
+                                type_of_location: values.type_of_location
+                            }
+                        }).then(function() {
+                            frm.__type_of_location_saved = true;
+                            d.hide();
+                            resolve();   // continue the submit
+                        }).catch(function() {
+                            d.enable_primary_action();
+                        });
+                    }
+                });
+
+                // Closing the dialog without saving aborts the submit
+                d.onhide = function() {
+                    if (!frm.__type_of_location_saved) {
+                        frappe.validated = false;
+                        resolve();
+                    }
+                };
+
+                d.show();
+            });
+        });
+    }
 });
 
 // === Completion Date and Time in Visit log  ===

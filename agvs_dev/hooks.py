@@ -45,6 +45,7 @@ doctype_js = {
 doc_events = {
 	"Asset": {
 		"validate": "agvs_dev.agvs_dev.events.asset.validate",
+		"before_submit": "agvs_dev.agvs_dev.events.asset.validate_mandatory_on_submit",
 		"on_submit": "agvs_dev.agvs_dev.events.asset.fetch_existing_balance",
 	},
 	"Asset Maintenance Log": {
