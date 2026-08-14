@@ -1,56 +1,29 @@
 
 
-// === Render Address & Contact widget (New Address button) ===
+
 frappe.ui.form.on('Lead', {
     refresh(frm) {
         if (!frm.is_new()) {
             frappe.contacts.render_address_and_contact(frm);
         }
-    }
-});
-
-// === Hide Create Button in Lead When unqualified  ===
-frappe.ui.form.on('Lead', {
-    refresh(frm) {
-        hide_create_buttons(frm);
+        // Hide Create Button for Customer and Prospect
+        // Hide Create Button for Quotation
+        setTimeout(() => {
+            frm.remove_custom_button('Customer', 'Create');
+            frm.remove_custom_button('Prospect', 'Create');
+            frm.remove_custom_button('Quotation', 'Create');
+            hide_create_buttons(frm);
+        }, 100);
     },
 
     qualification_status(frm) {
-        hide_create_buttons(frm);
+        frm.page && hide_create_buttons(frm);
     }
 });
 
 function hide_create_buttons(frm) {
-    if (
-        frm.doc.qualification_status === "Unqualified" ||
-        frm.doc.qualification_status === "In Process"
-    ) {
-        frm.page.remove_menu_item(__('Opportunity'), __('Create'));
-        frm.page.remove_menu_item(__('Customer'), __('Create'));
+    if (['Unqualified', 'In Process'].includes(frm.doc.qualification_status)) {
+        frm.page?.remove_inner_button('Opportunity', 'Create');
+        frm.page?.remove_inner_button('Customer', 'Create');
     }
 }
-
-
-// === Lead Hide Button  ===
-
-frappe.ui.form.on('Lead', {
-    refresh(frm) {
-        setTimeout(() => {
-            frm.remove_custom_button('Customer', 'Create');
-            frm.remove_custom_button('Prospect', 'Create');
-        }, 10);
-    }
-});
-
-
-
-
-// === Remove Quotation from lead  ===
-frappe.ui.form.on('Lead', {
-    refresh: function(frm) {
-        setTimeout(() => {
-            frm.remove_custom_button('Quotation', 'Create');
-        }, 100);
-    }
-});
-
