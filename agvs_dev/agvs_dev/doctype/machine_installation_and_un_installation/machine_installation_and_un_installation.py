@@ -685,3 +685,41 @@ def create_return_to_company(mi_name):
 
     return result
 
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_maintenance_team_users(
+    doctype,
+    txt,
+    searchfield,
+    start,
+    page_len,
+    filters=None
+):
+    filters = frappe.parse_json(filters or {})
+    maintenance_team = filters.get("maintenance_team")
+
+    if not maintenance_team:
+        return []
+
+    return frappe.db.sql("""
+        SELECT
+            mtm.team_member AS name,
+            mtm.full_name AS full_name
+        FROM `tabMaintenance Team Member` mtm
+        INNER JOIN `tabAsset Maintenance Team` mt
+            ON mt.name = mtm.parent
+        WHERE
+            mt.name = %(maintenance_team)s
+            AND (
+                mtm.team_member LIKE %(txt)s
+                OR mtm.full_name LIKE %(txt)s
+            )
+        ORDER BY mtm.full_name
+        LIMIT %(start)s, %(page_len)s
+    """, {
+        "maintenance_team": maintenance_team,
+        "txt": f"%{txt}%",
+        "start": start,
+        "page_len": page_len
+    })
