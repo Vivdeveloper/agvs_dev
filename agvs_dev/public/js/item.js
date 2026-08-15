@@ -1,5 +1,22 @@
 // === item for custom_strength_level  ===
 frappe.ui.form.on("Item", {
+    setup(frm) {
+        frm.set_query('asset_category', () => {
+            return {
+                filters: {
+                    custom_brand: frm.doc.brand
+                }
+            }
+        });
+        frm.set_query('custom_machine_mode', () => {
+            return {
+                filters: {
+                    asset_category: frm.doc.asset_category
+                }
+            }
+        });
+
+    },
     refresh(frm) {
         if (
             !frm.is_new() &&
