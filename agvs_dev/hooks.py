@@ -39,6 +39,13 @@ doctype_js = {
 	"Sales Order": "public/js/sales_order.js",
 	"Stock Entry": "public/js/stock_entry.js",
 }
+# DocType Class
+# ---------------
+# Override standard doctype classes
+
+override_doctype_class = {
+	"Opportunity": "agvs_dev.agvs_dev.events.opportunity.CustomOpportunity"
+}
 
 # Server Script Events for standard ERPNext doctypes
 # (custom doctypes handle events via their Python controller class)
@@ -204,13 +211,6 @@ scheduler_events = {
 # 	"Event": "frappe.desk.doctype.event.event.has_permission",
 # }
 
-# DocType Class
-# ---------------
-# Override standard doctype classes
-
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
 
 # Document Events
 # ---------------

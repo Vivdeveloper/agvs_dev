@@ -69,4 +69,8 @@ def lead_to_opportunity(doc, method=None):
         if hasattr(lead, "lead_owner") and not doc.get("opportunity_owner"):
             doc.opportunity_owner = lead.lead_owner
 
+from erpnext.crm.doctype.opportunity.opportunity import Opportunity
 
+class CustomOpportunity(Opportunity):
+    def set_opportunity_type(self):
+        pass
