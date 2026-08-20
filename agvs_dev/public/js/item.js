@@ -18,6 +18,7 @@ frappe.ui.form.on("Item", {
 
     },
     refresh(frm) {
+        frm.set_df_property("naming_series", "hidden", true);
         if (
             !frm.is_new() &&
             frm.doc.item_group === "SO" &&
@@ -239,9 +240,9 @@ function set_series(frm) {
         ns = `${ig}.-.${frm.doc.custom_stick_size || ""}.-.${frm.doc.custom_scent_family || ""}.-.#.`;
     }
 
-    // HP  (NEW)
+    // HP
     else if (ig === "HP") {
-        ns = `${ig}.-.${frm.doc.custom_hp_sub_category || ""}.-.${frm.doc.custom_scent_family || ""}.-.#.-.${frm.doc.custom_dilution_category || ""}.`;
+        ns = `${ig}.-.${frm.doc.custom_hp_sub_category || ""}.-.${frm.doc.custom_scent_family || ""}.-.####-.${frm.doc.custom_dilution_category || ""}.`;
     }
 
     if (ns) frm.set_value("naming_series", ns);

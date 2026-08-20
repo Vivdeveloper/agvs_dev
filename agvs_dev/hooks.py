@@ -63,7 +63,7 @@ doc_events = {
 		"on_update": "agvs_dev.agvs_dev.events.asset_maintenance_team.create_user_permissions_entry",
 	},
 	"Item": {
-		"before_insert": "agvs_dev.agvs_dev.events.item.item_name_series",
+		"before_naming": "agvs_dev.agvs_dev.events.item.set_item_naming_series",
 	},
 	"Job Requisition": {
 		"before_insert": "agvs_dev.agvs_dev.events.job_requisition.job_requistion",
