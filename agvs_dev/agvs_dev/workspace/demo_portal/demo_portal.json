@@ -1,0 +1,85 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"B8rlyHiKfE\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px; letter-spacing: 0.18px;\\\"><b>Machine Installation / Uninstallation</b></span>\",\"col\":12}},{\"id\":\"RUcFvL-4ua\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Machine Installation Plan This Week\",\"col\":4}},{\"id\":\"WrzH5GJwC0\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Installation Overdue\",\"col\":4}},{\"id\":\"Ms3CZ1x0Li\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Uninstallation Overdue\",\"col\":4}},{\"id\":\"4X5yBjL-EP\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Visit Planned Portal</b></span>\",\"col\":12}},{\"id\":\"O1T7Z5bGkc\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Planned Visit Log\",\"col\":4}},{\"id\":\"FU0UnMX4t0\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Visit Log\",\"col\":4}},{\"id\":\"uKO1is01Km\",\"type\":\"card\",\"data\":{\"card_name\":\"Visit Entry\",\"col\":4}}]",
+ "creation": "2026-01-05 12:44:04.603629",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "setting",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Demo Portal",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Visit Entry",
+   "link_count": 2,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Visit Log",
+   "link_count": 0,
+   "link_to": "Visit Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Machine Installation",
+   "link_count": 0,
+   "link_to": "Machine Installation and Un-Installation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-08-22 12:37:20.752620",
+ "modified_by": "Administrator",
+ "module": "agvs_dev",
+ "name": "Demo Portal",
+ "number_cards": [],
+ "owner": "indrani@exacuer.com",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [
+  {
+   "document_type": "Machine Installation and Un-Installation",
+   "label": "Machine Installation Plan This Week",
+   "quick_list_filter": "[]"
+  },
+  {
+   "document_type": "Visit Log",
+   "label": "Planned Visit Log",
+   "quick_list_filter": "[[\"Visit Log\",\"docstatus\",\"=\",\"0\",false],[\"Visit Log\",\"maintenance_status\",\"=\",\"Planned\",false]]"
+  },
+  {
+   "document_type": "Machine Installation and Un-Installation",
+   "label": "Installation Overdue",
+   "quick_list_filter": "[]"
+  },
+  {
+   "document_type": "Visit Log",
+   "label": "Visit Log",
+   "quick_list_filter": "[[\"Visit Log\",\"docstatus\",\"=\",\"1\",false],[\"Visit Log\",\"maintenance_status\",\"=\",\"Overdue\",false]]"
+  },
+  {
+   "document_type": "Machine Installation and Un-Installation",
+   "label": "Uninstallation Overdue",
+   "quick_list_filter": "[]"
+  }
+ ],
+ "roles": [],
+ "sequence_id": 2.0,
+ "shortcuts": [],
+ "title": "Demo Portal"
+}
