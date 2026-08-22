@@ -13,6 +13,18 @@ frappe.ui.form.on('Opportunity', {
     }
 });
 
+function set_opportunity_dynamic_link(frm) {
+    if (frm.is_new() || !frm.doc.name) {
+        return;
+    }
+
+    frappe.dynamic_link = {
+        doctype: frm.doc.doctype,
+        doc: frm.doc,
+        fieldname: "name",
+    };
+}
+
 function calculate_opportunity_amount(frm) {
     const months = flt(frm.doc.custom_months);
     const income = flt(frm.doc.custom_income);
@@ -22,41 +34,6 @@ function calculate_opportunity_amount(frm) {
         months * income
     );
 }
-
-
-// === Buttons hide from Opportunity  ===
-// frappe.ui.form.on('Opportunity', {
-//     refresh: function(frm) {
-
-//         setTimeout(() => {
-
-//             // Hide both buttons first
-//             frm.remove_custom_button('Supplier Quotation', 'Create');
-//             frm.remove_custom_button('Request For Quotation', 'Create');
-
-//             // Show Quotation only if stage is NOT Introduction Meeting or Qualify
-//             if (frm.doc.sales_stage != "2. Introduction Meeting" || frm.doc.sales_stage != "1. Qualify") {
-//                 frm.add_custom_button(__('Quotation'), function() {
-//                     frappe.model.open_mapped_doc({
-//                         method: "erpnext.crm.doctype.lead.lead.make_quotation",
-//                         frm: frm
-//                     });
-//                 }, __('Create'));
-//             }
-
-//             // Show Customer only if stage is Won
-//             if (frm.doc.sales_stage === "7. Won") {
-//                 frm.add_custom_button(__('Customer'), function() {
-//                     frappe.model.open_mapped_doc({
-//                         method: "erpnext.crm.doctype.lead.lead.make_customer",
-//                         frm: frm
-//                     });
-//                 }, __('Create'));
-//             }
-
-//         }, 200);
-//     }
-// });
 
 frappe.ui.form.on('Opportunity', {
     refresh(frm) {
@@ -98,6 +75,7 @@ frappe.ui.form.on('Opportunity', {
         // Address button — always visible on saved docs
         if (!frm.is_new()) {
             frm.add_custom_button(__('Address'), function () {
+                set_opportunity_dynamic_link(frm);
                 frappe.route_options = {
                     address_title: frm.doc.customer_name || frm.doc.contact_person || frm.doc.name,
                     address_type: 'Billing'
@@ -105,6 +83,8 @@ frappe.ui.form.on('Opportunity', {
                 frappe.new_doc('Address');
             }, __('Create'));
         }
+
+        set_opportunity_dynamic_link(frm);
     }
 });
 
@@ -212,30 +192,6 @@ frappe.ui.form.on('Opportunity', {
 });
 
 
-// frappe.ui.form.on('Opportunity', {
-//     refresh: function(frm) {
-//         if (frm.doc.name && !frm.doc.__islocal) {
-//             frappe.db.get_list('Machine Installation and Un-Installation', {
-//                 filters: {
-//                     hidden_opportunity_name: frm.doc.name
-//                 },
-//                 fields: ['name', 'actual_installation_date', 'actual_uninstallation_date'],
-//                 limit: 1
-//             }).then(function(data) {
-//                 console.log("Fetched Data:", data);
-//                 if (data && data.length > 0) {
-//                     let row = data[0];
-
-//                     frm.set_value('custom_actual_installation_date', 
-//                         row.actual_installation_date || '');
-//                     frm.set_value('custom_actual_uninstallation_date', 
-//                         row.actual_uninstallation_date || '');
-//                 }
-//             });
-//         }
-//     }
-// });
-
 // === Menu in Opportunity (disabled) ===
 frappe.ui.form.on('Opportunity', {
     refresh(frm) {
@@ -326,461 +282,6 @@ frappe.ui.form.on('Opportunity', {
     }
 });
 
-// === Opportunity Machine installation form  ===
-// // // // // frappe.ui.form.on('Opportunity', {
-// // // // //     refresh(frm) {
-
-// // // // //         if (frm.doc.sales_stage === "3. Demo") {
-
-// // // // //             frm.add_custom_button(__('Create Demo Installation'), () => {
-
-// // // // //                 frappe.route_options = {
-// // // // //                     reference_name: frm.doc.name,
-// // // // //                     contact_person: frm.doc.contact_person,
-// // // // //                     contact_email: frm.doc.contact_email,
-// // // // //                     contact_mobile: frm.doc.contact_mobile,
-// // // // //                     installation_type: "Demo Installation",
-// // // // //                     planned_installation_date: frm.doc.custom_demo_installation_date,
-// // // // //                     planned_uninstallation_date: frm.doc.custom_demo_uninstallation_date_copy
-// // // // //                 };
-
-// // // // //                 frappe.new_doc('Machine Installation');
-// // // // //             });
-
-// // // // //         }
-// // // // //     }
-// // // // // });
-
-// // // // // frappe.ui.form.on('Opportunity', {
-// // // // //     refresh(frm) {
-
-// // // // //         if (frm.doc.sales_stage === "3. Demo") {
-
-// // // // //             frm.add_custom_button(__('Create Demo Installation'), () => {
-
-// // // // //                 frappe.new_doc('Machine Installation and Un-Installation', {}, function(doc) {
-
-// // // // //                     frappe.model.set_value(doc.doctype, doc.name, "reference_name", frm.doc.name);
-// // // // //                     frappe.model.set_value(doc.doctype, doc.name, "contact_person", frm.doc.contact_person);
-// // // // //                     frappe.model.set_value(doc.doctype, doc.name, "contact_email", frm.doc.contact_email);
-// // // // //                     frappe.model.set_value(doc.doctype, doc.name, "contact_mobile", frm.doc.contact_mobile);
-// // // // //                     frappe.model.set_value(doc.doctype, doc.name, "installation_type", "Demo Installation");
-// // // // //                     frappe.model.set_value(doc.doctype, doc.name, "planned_installation_date", frm.doc.custom_demo_installation_date);
-// // // // //                     frappe.model.set_value(doc.doctype, doc.name, "planned_uninstallation_date", frm.doc.custom_demo_uninstallation_date_copy);
-
-// // // // //                 });
-
-// // // // //             });
-
-// // // // //         }
-// // // // //     }
-// // // // // });
-
-
-
-
-
-
-
-
-
-// // // // frappe.ui.form.on('Opportunity', {
-// // // //     refresh(frm) {
-// // // //         if (frm.doc.sales_stage === "3. Demo") {
-// // // //             frm.add_custom_button(__('Create Demo Installation'), () => {
-
-// // // //                 // First, get the address linked to the lead
-// // // //                 // frappe.db.get_value('Address', 
-// // // //                 //     {'name': frm.doc.customer_address}, 
-// // // //                 //     ['address_line1', 'address_line2', 'city', 'state', 'pincode', 'country'],
-// // // //                 //     function(address_data) {
-                        
-// // // //                 //         // Build formatted address string
-// // // //                 //         let formatted_address = '';
-// // // //                 //         if (address_data) {
-// // // //                 //             formatted_address = [
-// // // //                 //                 address_data.address_line1,
-// // // //                 //                 address_data.address_line2,
-// // // //                 //                 address_data.city,
-// // // //                 //                 address_data.state,
-// // // //                 //                 address_data.pincode,
-// // // //                 //                 address_data.country
-// // // //                 //             ].filter(Boolean).join('\n');
-// // // //                 //         }
-                
-// // // //                         frappe.db.get_list('Machine Installation and Un-Installation', {
-// // // //                             filters: {
-// // // //                                 opportunity: frm.doc.name
-// // // //                             },
-// // // //                             fields: ['address'],
-// // // //                             order_by: 'creation desc',
-// // // //                             limit: 1
-// // // //                         }).then(res => {
-                        
-// // // //                             let formatted_address = '';
-                        
-// // // //                             if (res && res.length > 0) {
-// // // //                                 formatted_address = res[0].address;
-// // // //                             }
-
-            
-
-// // // //                         frappe.new_doc('Machine Installation and Un-Installation', {}, function(doc) {
-// // // //                             frappe.model.set_value(doc.doctype, doc.name, "hidden_opportunity_name", frm.doc.name);
-// // // //                             frappe.model.set_value(doc.doctype, doc.name, "opportunity", frm.doc.name);
-// // // //                             frappe.model.set_value(doc.doctype, doc.name, "contact_person", frm.doc.contact_person);
-// // // //                             frappe.model.set_value(doc.doctype, doc.name, "contact_email", frm.doc.contact_email);
-// // // //                             frappe.model.set_value(doc.doctype, doc.name, "contact_mobile", frm.doc.contact_mobile);
-// // // //                             frappe.model.set_value(doc.doctype, doc.name, "installation_type", "Demo Installation");
-// // // //                             frappe.model.set_value(doc.doctype, doc.name, "planned_installation_date", frm.doc.custom_demo_installation_date);
-// // // //                             frappe.model.set_value(doc.doctype, doc.name, "planned_uninstallation_date", frm.doc.custom_demo_uninstallation_date_copy);
-// // // //                             frappe.model.set_value(doc.doctype, doc.name, "address", formatted_address);
-// // // //                         });
-// // // //                     }
-// // // //                 );
-// // // //             });
-// // // //         }
-// // // //     }
-// // // // });
-
-
-
-
-// // // // frappe.ui.form.on('Opportunity', {
-// // // //     refresh(frm) {
-// // // //         if (frm.doc.sales_stage === "3. Demo") {
-
-// // // //             frm.add_custom_button(__('Create Demo Installation'), async () => {
-
-// // // //                 let formatted_address = '';
-
-// // // //                 try {
-// // // //                     // ✅ Fetch last Machine Installation address
-// // // //                     let res = await frappe.db.get_list('Machine Installation and Un-Installation', {
-// // // //                         filters: {
-// // // //                             opportunity: frm.doc.name
-// // // //                         },
-// // // //                         fields: ['address'],
-// // // //                         order_by: 'creation desc',
-// // // //                         limit: 1
-// // // //                     });
-
-// // // //                     // ✅ Use only if properly available
-// // // //                     if (res && res.length > 0 && res[0].address && res[0].address.trim() !== '') {
-// // // //                         formatted_address = res[0].address;
-// // // //                     }
-
-// // // //                     // ✅ Use custom_address ONLY if user filled it manually
-// // // //                     if (!formatted_address && frm.doc.custom_address && frm.doc.custom_address.trim() !== '') {
-// // // //                         formatted_address = frm.doc.custom_address;
-// // // //                     }
-
-// // // //                 } catch (err) {
-// // // //                     console.error("Error fetching address:", err);
-// // // //                 }
-
-// // // //                 // ✅ Create new document
-// // // //                 frappe.new_doc('Machine Installation and Un-Installation', {}, function(doc) {
-
-// // // //                     frappe.model.set_value(doc.doctype, doc.name, "hidden_opportunity_name", frm.doc.name);
-// // // //                     frappe.model.set_value(doc.doctype, doc.name, "opportunity", frm.doc.name);
-
-// // // //                     frappe.model.set_value(doc.doctype, doc.name, "contact_person", frm.doc.contact_person);
-// // // //                     frappe.model.set_value(doc.doctype, doc.name, "contact_email", frm.doc.contact_email);
-// // // //                     frappe.model.set_value(doc.doctype, doc.name, "contact_mobile", frm.doc.contact_mobile);
-
-// // // //                     frappe.model.set_value(doc.doctype, doc.name, "installation_type", "Demo Installation");
-
-// // // //                     frappe.model.set_value(doc.doctype, doc.name, "planned_installation_date", frm.doc.custom_demo_installation_date);
-// // // //                     frappe.model.set_value(doc.doctype, doc.name, "planned_uninstallation_date", frm.doc.custom_demo_uninstallation_date_copy);
-
-// // // //                     // ✅ FINAL: set address ONLY if valid
-// // // //                     if (formatted_address) {
-// // // //                         frappe.model.set_value(doc.doctype, doc.name, "address", formatted_address);
-// // // //                     }
-
-// // // //                 });
-
-// // // //             });
-// // // //         }
-// // // //     }
-// // // // });
-
-
-
-// // // frappe.ui.form.on('Opportunity', {
-// // //     refresh(frm) {
-// // //         if (frm.doc.sales_stage === "3. Demo") {
-
-// // //             frm.add_custom_button(__('Create Demo Installation'), async () => {
-
-// // //                 let formatted_address = '';
-
-// // //                 try {
-// // //                     // ✅ 1. Last Machine Installation
-// // //                     let res = await frappe.db.get_list('Machine Installation and Un-Installation', {
-// // //                         filters: { opportunity: frm.doc.name },
-// // //                         fields: ['address'],
-// // //                         order_by: 'creation desc',
-// // //                         limit: 1
-// // //                     });
-
-// // //                     if (res?.length && res[0].address) {
-// // //                         formatted_address = res[0].address;
-// // //                     }
-
-// // //                     // ✅ 2. custom_address
-// // //                     if (!formatted_address && frm.doc.custom_address) {
-// // //                         formatted_address = frm.doc.custom_address;
-// // //                     }
-
-// // //                     // ✅ 3. Opportunity Address (CORRECT WAY)
-// // //                     if (!formatted_address && frm.doc.customer_address) {
-// // //                         let addr = await frappe.db.get_doc('Address', frm.doc.customer_address);
-
-// // //                         formatted_address = [
-// // //                             addr.address_line1,
-// // //                             addr.address_line2,
-// // //                             addr.city,
-// // //                             addr.state,
-// // //                             addr.pincode,
-// // //                             addr.country
-// // //                         ].filter(Boolean).join(',\n');
-// // //                     }
-
-// // //                 } catch (err) {
-// // //                     console.error("Error fetching address:", err);
-// // //                 }
-
-// // //                 // ✅ Create document
-// // //                 frappe.new_doc('Machine Installation and Un-Installation', {}, function(doc) {
-
-// // //                     frappe.model.set_value(doc.doctype, doc.name, "hidden_opportunity_name", frm.doc.name);
-// // //                     frappe.model.set_value(doc.doctype, doc.name, "opportunity", frm.doc.name);
-
-// // //                     frappe.model.set_value(doc.doctype, doc.name, "contact_person", frm.doc.contact_person);
-// // //                     frappe.model.set_value(doc.doctype, doc.name, "contact_email", frm.doc.contact_email);
-// // //                     frappe.model.set_value(doc.doctype, doc.name, "contact_mobile", frm.doc.contact_mobile);
-
-// // //                     frappe.model.set_value(doc.doctype, doc.name, "installation_type", "Demo Installation");
-
-// // //                     frappe.model.set_value(doc.doctype, doc.name, "planned_installation_date", frm.doc.custom_demo_installation_date);
-// // //                     frappe.model.set_value(doc.doctype, doc.name, "planned_uninstallation_date", frm.doc.custom_demo_uninstallation_date_copy);
-
-// // //                     if (formatted_address) {
-// // //                         frappe.model.set_value(doc.doctype, doc.name, "address", formatted_address);
-// // //                     }
-
-// // //                 });
-
-// // //             });
-// // //         }
-// // //     }
-// // // });
-
-
-// frappe.ui.form.on('Opportunity', {
-//     refresh(frm) {
-//         if (frm.doc.sales_stage === "3. Demo") {
-//             frm.add_custom_button(__('Create Demo Installation'), async () => {
-//                 let formatted_address = '';
-//                 try {
-//                     // 1. Last Machine Installation
-//                     let res = await frappe.db.get_list('Machine Installation and Un-Installation', {
-//                         filters: { opportunity: frm.doc.name },
-//                         fields: ['address'],
-//                         order_by: 'creation desc',
-//                         limit: 1
-//                     });
-//                     if (res && res.length && res[0].address) {
-//                         formatted_address = res[0].address;
-//                     }
-
-//                     // 2. custom_address
-//                     if (!formatted_address && frm.doc.custom_address) {
-//                         formatted_address = frm.doc.custom_address;
-//                     }
-
-//                     // 3. Opportunity Address (SAFE WAY)
-//                     if (!formatted_address && frm.doc.customer_address) {
-//                         let isFormattedAddress = frm.doc.customer_address.includes(',') || frm.doc.customer_address.includes('\n');
-//                         if (isFormattedAddress) {
-//                             formatted_address = frm.doc.customer_address;
-//                         } else {
-//                             try {
-//                                 let addr = await frappe.db.get_doc('Address', frm.doc.customer_address);
-//                                 formatted_address = [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.pincode, addr.country].filter(Boolean).join(',\n');
-//                             } catch (err) {
-//                                 console.warn("Could not fetch Address doc:", err);
-//                                 formatted_address = frm.doc.customer_address;
-//                             }
-//                         }
-//                     }
-//                 } catch (err) {
-//                     console.error("Error fetching address:", err);
-//                 }
-
-//                 // Create document
-//                 frappe.new_doc('Machine Installation and Un-Installation', {}, function(doc) {
-//                     frappe.model.set_value(doc.doctype, doc.name, "hidden_opportunity_name", frm.doc.name);
-//                     frappe.model.set_value(doc.doctype, doc.name, "opportunity", frm.doc.name);
-//                     frappe.model.set_value(doc.doctype, doc.name, "contact_person", frm.doc.contact_person);
-//                     frappe.model.set_value(doc.doctype, doc.name, "contact_email", frm.doc.contact_email);
-//                     frappe.model.set_value(doc.doctype, doc.name, "contact_mobile", frm.doc.contact_mobile);
-//                     frappe.model.set_value(doc.doctype, doc.name, "installation_type", "Demo Installation");
-//                     frappe.model.set_value(doc.doctype, doc.name, "planned_installation_date", frm.doc.custom_demo_installation_date);
-//                     frappe.model.set_value(doc.doctype, doc.name, "planned_uninstallation_date", frm.doc.custom_demo_uninstallation_date_copy);
-//                     if (formatted_address) {
-//                         frappe.model.set_value(doc.doctype, doc.name, "address", formatted_address);
-//                     }
-//                 });
-//             });
-//         }
-//     }
-// });
-
-
-
-// frappe.ui.form.on('Opportunity', {
-//     refresh(frm) {
-//         if (frm.doc.sales_stage === "3. Demo") {
-//             frm.add_custom_button(__('Create Demo Installation'), async () => {
-//                 let formatted_address = '';
-//                 try {
-//                     // 1. Last Machine Installation
-//                     let res = await frappe.db.get_list('Machine Installation and Un-Installation', {
-//                         filters: { opportunity: frm.doc.name },
-//                         fields: ['address'],
-//                         order_by: 'creation desc',
-//                         limit: 1
-//                     });
-//                     if (res && res.length && res[0].address) {
-//                         formatted_address = res[0].address;
-//                     }
-//                     // 2. custom_address
-//                     if (!formatted_address && frm.doc.custom_address) {
-//                         formatted_address = frm.doc.custom_address;
-//                     }
-//                     // 3. Opportunity Address
-//                     if (!formatted_address && frm.doc.customer_address) {
-//                         let isFormatted = frm.doc.customer_address.includes(',') || frm.doc.customer_address.includes('\n');
-//                         if (isFormatted) {
-//                             formatted_address = frm.doc.customer_address;
-//                         } else {
-//                             try {
-//                                 let addr = await frappe.db.get_doc('Address', frm.doc.customer_address);
-//                                 formatted_address = [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.pincode, addr.country].filter(Boolean).join(', ');
-//                             } catch (err) {
-//                                 console.warn("Could not fetch Address doc:", err);
-//                                 formatted_address = frm.doc.customer_address;
-//                             }
-//                         }
-//                     }
-//                 } catch (err) {
-//                     console.error("Error fetching address:", err);
-//                 }
-
-//                 // DO NOT pass address in defaults — triggers Frappe Address lookup
-//                 let defaults = {
-//                     hidden_opportunity_name: frm.doc.name,
-//                     opportunity: frm.doc.name,
-//                     contact_person: frm.doc.contact_person,
-//                     contact_email: frm.doc.contact_email,
-//                     contact_mobile: frm.doc.contact_mobile,
-//                     installation_type: "Demo Installation",
-//                     planned_installation_date: frm.doc.custom_demo_installation_date,
-//                     planned_uninstallation_date: frm.doc.custom_demo_uninstallation_date_copy
-//                 };
-
-//                 frappe.new_doc('Machine Installation and Un-Installation', defaults, function(doc) {
-//                     // Set address after form is fully loaded via setTimeout
-//                     if (formatted_address) {
-//                         let doctype = doc.doctype;
-//                         let docname = doc.name;
-//                         setTimeout(() => {
-//                             frappe.model.set_value(doctype, docname, "address", formatted_address);
-//                         }, 1000);
-//                     }
-//                 });
-//             });
-//         }
-//     }
-// });
-
-
-
-
-// frappe.ui.form.on('Opportunity', {
-//     refresh(frm) {
-//         if (frm.doc.sales_stage === "3. Demo") {
-
-//             frm.add_custom_button(__('Create Demo Installation'), async () => {
-
-//                 let formatted_address = '';
-
-//                 try {
-//                     // ✅ 1. Last Machine Installation
-//                     let res = await frappe.db.get_list('Machine Installation and Un-Installation', {
-//                         filters: { opportunity: frm.doc.name },
-//                         fields: ['address'],
-//                         order_by: 'creation desc',
-//                         limit: 1
-//                     });
-
-//                     if (res?.length && res[0].address) {
-//                         formatted_address = res[0].address;
-//                     }
-
-//                     // ✅ 2. custom_address
-//                     if (!formatted_address && frm.doc.custom_address) {
-//                         formatted_address = frm.doc.custom_address;
-//                     }
-
-//                     // ✅ 3. Opportunity Address (CORRECT WAY)
-//                     if (!formatted_address && frm.doc.customer_address) {
-//                         let addr = await frappe.db.get_doc('Address', frm.doc.customer_address);
-
-//                         formatted_address = [
-//                             addr.address_line1,
-//                             addr.address_line2,
-//                             addr.city,
-//                             addr.state,
-//                             addr.pincode,
-//                             addr.country
-//                         ].filter(Boolean).join(',\n');
-//                     }
-
-//                 } catch (err) {
-//                     console.error("Error fetching address:", err);
-//                 }
-
-//                 // ✅ Create document
-//                 frappe.new_doc('Machine Installation and Un-Installation', {}, function(doc) {
-
-//                     frappe.model.set_value(doc.doctype, doc.name, "hidden_opportunity_name", frm.doc.name);
-//                     frappe.model.set_value(doc.doctype, doc.name, "opportunity", frm.doc.name);
-
-//                     frappe.model.set_value(doc.doctype, doc.name, "contact_person", frm.doc.contact_person);
-//                     frappe.model.set_value(doc.doctype, doc.name, "contact_email", frm.doc.contact_email);
-//                     frappe.model.set_value(doc.doctype, doc.name, "contact_mobile", frm.doc.contact_mobile);
-
-//                     frappe.model.set_value(doc.doctype, doc.name, "installation_type", "Demo Installation");
-
-//                     frappe.model.set_value(doc.doctype, doc.name, "planned_installation_date", frm.doc.custom_demo_installation_date);
-//                     frappe.model.set_value(doc.doctype, doc.name, "planned_uninstallation_date", frm.doc.custom_demo_uninstallation_date_copy);
-
-//                     if (formatted_address) {
-//                         frappe.model.set_value(doc.doctype, doc.name, "address", formatted_address);
-//                     }
-
-//                 });
-
-//             });
-//         }
-//     }
-// });
-
-
 frappe.ui.form.on('Opportunity', {
     refresh(frm) {
         if (frm.doc.sales_stage === "3. Demo") {
@@ -853,41 +354,6 @@ function update_lead(frm) {
     }
 }
 
-
-
-
-// === Quotation create in opp (disabled) ===
-// frappe.ui.form.on('Opportunity', {
-//     refresh: function(frm) {
-
-//         if (!frm.is_new() && frm.doc.sales_stage) {
-
-//             if (frm.doc.sales_stage.includes("3. Demo")) {
-
-//                 frm.add_custom_button(
-//                     "Create Machine Installation",
-//                     function() {
-
-//                         frappe.route_options = {
-//                             reference_name: frm.doc.name,
-//                             contact_person: frm.doc.contact_person,
-//                             contact_email: frm.doc.contact_email,
-//                             contact_mobile: frm.doc.contact_mobile,
-//                             installation_type: "Demo Installation"
-//                         };
-
-//                         frappe.new_doc("Machine Installation");
-//                     },
-//                     "Create"
-//                 );
-//             }
-//         }
-//     }
-// });
-
-
-
-// === Read only date field (disabled) ===
 frappe.ui.form.on('Opportunity', {
     refresh: function(frm) {
         if (frm.doc.sales_stage !== "3. Demo") {
@@ -900,28 +366,3 @@ frappe.ui.form.on('Opportunity', {
         }
     }
 });
-
-
-// frappe.ui.form.on('Opportunity', {
-//     onload: function(frm) {
-//         set_fields(frm);
-//     },
-//     refresh: function(frm) {
-//         set_fields(frm);
-//     },
-//     sales_stage: function(frm) {
-//     set_fields(frm);
-//     }
-// });
-
-// function set_fields(frm) {
-//     if (frm.doc.sales_stage === "3. Demo") {
-//         frm.set_df_property("custom_actual_installation_date", "read_only", 0);
-//         frm.set_df_property("custom_actual_uninstallation_date", "read_only", 0);
-//     } else {
-//         frm.set_df_property("custom_actual_installation_date", "read_only", 1);
-//         frm.set_df_property("custom_actual_uninstallation_date", "read_only", 1);
-//     }
-// }
-
-

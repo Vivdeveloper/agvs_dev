@@ -24,6 +24,8 @@ fixtures = [
 
 
 # Client Scripts for standard ERPNext doctypes (custom doctypes have their own doctype JS files)
+app_include_js = "/assets/agvs_dev/js/address_quick_entry.js"
+
 doctype_js = {
 	"Address": "public/js/address.js",
 	"Asset": "public/js/asset.js",
